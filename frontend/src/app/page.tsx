@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+// ─────────────────────────────────────────────────────────────────────────
+// PROPERLY TYPED API RESPONSES — matches server/git_ops.py output exactly
+// ─────────────────────────────────────────────────────────────────────────
+
 type Commit = {
   hash: string;
   shortHash: string;
@@ -13,10 +17,20 @@ type Commit = {
   isRebalance: boolean;
 };
 
-type StreamMsg = {
-  type: string;
-  [key: string]: unknown;
-};
+// Discriminated union for stream events — type-safe handling of all variants
+type StreamMsg =
+  | { type: "session_start"; agent_dir: string }
+  | { type: "output"; text: string }
+  | { type: "tool_use"; text: string }
+  | { type: "error_line"; text: string }
+  | { type: "task_end"; text: string }
+  | { type: "system"; text: string }
+  | { type: "error"; message: string }
+  | { type: "session_end"; return_code: number };
+
+// ─────────────────────────────────────────────────────────────────────────
+// MAIN DASHBOARD COMPONENT
+// ─────────────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [commits, setCommits] = useState<Commit[]>([]);
@@ -71,7 +85,7 @@ export default function Dashboard() {
             const msg = JSON.parse(line) as StreamMsg;
             setStreamLog((prev) => [...prev, msg]);
           } catch {
-            // skip malformed
+            // skip malformed JSON
           }
         }
       }
@@ -222,58 +236,80 @@ export default function Dashboard() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// STREAM EVENT RENDERER — Type-safe handling with discriminated union
+// ─────────────────────────────────────────────────────────────────────────
+
 // Strip ANSI escape sequences (\x1b[...m, \x1b[K, etc.)
 function stripAnsi(s: string): string {
   return s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
 }
 
 function StreamEvent({ msg }: { msg: StreamMsg }) {
-  const t = msg.type;
-  const text = stripAnsi(String((msg as { text?: string }).text ?? ""));
+  // TypeScript now knows exactly which properties exist for each type!
+  switch (msg.type) {
+    case "session_start":
+      return (
+        <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
+          ▶ session start
+          <div className="text-[10px] text-zinc-600 mt-0.5">
+            {msg.agent_dir}
+          </div>
+        </div>
+      );
 
-  if (t === "session_start") {
-    return (
-      <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
-        ▶ session start
-      </div>
-    );
+    case "session_end":
+      return (
+        <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
+          ✓ session end (exit {msg.return_code})
+        </div>
+      );
+
+    case "tool_use":
+      return (
+        <div className="text-amber-400 font-medium">
+          {stripAnsi(msg.text)}
+        </div>
+      );
+
+    case "task_end":
+      return (
+        <div className="text-blue-400">
+          {stripAnsi(msg.text)}
+        </div>
+      );
+
+    case "system":
+      return (
+        <div className="text-purple-400 italic">
+          {stripAnsi(msg.text)}
+        </div>
+      );
+
+    case "error_line":
+      return (
+        <div className="text-red-400">
+          {stripAnsi(msg.text)}
+        </div>
+      );
+
+    case "error":
+      return (
+        <div className="text-red-400 font-semibold">
+          ✗ {msg.message}
+        </div>
+      );
+
+    case "output": {
+      // Default agent output — most common type. Skip empty lines.
+      const text = stripAnsi(msg.text);
+      if (!text.trim()) return null;
+      return <div className="text-zinc-300 whitespace-pre-wrap">{text}</div>;
+    }
+
+    default:
+      // TypeScript ensures this is unreachable (exhaustiveness check)
+      const _exhaustive: never = msg;
+      return null;
   }
-  if (t === "session_end") {
-    const rc = (msg as { return_code?: number }).return_code;
-    return (
-      <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
-        ✓ session end {typeof rc === "number" ? `(exit ${rc})` : ""}
-      </div>
-    );
-  }
-  if (t === "tool_use") {
-    return <div className="text-amber-400 font-medium">{text}</div>;
-  }
-  if (t === "task_end") {
-    return <div className="text-blue-400">{text}</div>;
-  }
-  if (t === "system") {
-    return <div className="text-purple-400 italic">{text}</div>;
-  }
-  if (t === "error_line") {
-    return <div className="text-red-400">{text}</div>;
-  }
-  if (t === "error") {
-    return (
-      <div className="text-red-400 font-semibold">
-        ✗ {String((msg as { message?: string }).message ?? "error")}
-      </div>
-    );
-  }
-  if (t === "output") {
-    // Default agent output — most common type. Skip empty lines (just ANSI).
-    if (!text.trim()) return null;
-    return <div className="text-zinc-300 whitespace-pre-wrap">{text}</div>;
-  }
-  // Unknown type — fallback shows type + text for debugging
-  return (
-    <div className="text-zinc-600">
-      [{t}] {text}
-    </div>
-  );
 }
