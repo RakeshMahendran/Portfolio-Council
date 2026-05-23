@@ -1,0 +1,12 @@
+[
+  {"symbol": "RELIANCE", "qty": 12, "avg_price": 2450.50},
+  {"symbol": "TCS", "qty": 8, "avg_price": 3920.00},
+  {"symbol": "HDFCBANK", "qty": 25, "avg_price": 1580.30},
+  {"symbol": "INFY", "qty": 15, "avg_price": 1450.75},
+  {"symbol": "NIFTYBEES", "qty": 100, "avg_price": 245.20},
+  {"symbol": "ICICIBANK", "qty": 30, "avg_price": 1120.40},
+  {"symbol": "HAL", "qty": 4, "avg_price": 4312.41},
+  {"symbol": "BSE", "qty": 11, "avg_price": 1997.58},
+  {"symbol": "GOLDBEES", "qty": 50, "avg_price": 87.86},
+  {"symbol": "SBIN", "qty": 40, "avg_price": 755.20}
+]
