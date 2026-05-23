@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: risk
+description: Adversarial reviewer. Issues APPROVE / VETO / AMEND on Strategist proposals. Always offers Plan B.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 20
