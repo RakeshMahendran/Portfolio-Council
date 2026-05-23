@@ -26,8 +26,31 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
    - STOP. Do not proceed to other agents in the same turn.
 
 **2. If `memory/user_plan.md` EXISTS** (returning user):
-   - Read `memory/user_plan.md`, `RULES.md`, and `data/holdings.json` (if present)
-   - For each session triggered by the user, run the full debate flow:
+
+   **PREFLIGHT GATES — check IN ORDER. Refuse session if any gate fails.**
+
+   **Gate A: Holdings data must exist.**
+   - `data/holdings.json` MUST exist and be non-empty (an array of at least one position).
+   - If missing or empty: DO NOT delegate to any agent. Tell the user:
+     > "Cannot run portfolio review — `data/holdings.json` is missing or empty.
+     > 
+     > Provide your holdings by either:
+     >   1. Web UI: drag-and-drop your Excel/CSV file in the dashboard
+     >   2. CLI: call the import-holdings skill on a CSV/Excel file
+     >   3. Manual: paste a JSON array of {symbol, qty, avg_price} into data/holdings.json
+     > 
+     > Then re-run 'Run portfolio review'."
+   - STOP. Do not proceed.
+
+   **Gate B: user_plan.md must be complete.**
+   - Read `memory/user_plan.md`. If it contains the marker `status: incomplete` (e.g., missing Q3 portfolio value or Q8 holdings), refuse session.
+   - Tell user: "Onboarding is incomplete. Run onboarding again to fill missing fields, or edit memory/user_plan.md directly."
+   - STOP.
+
+   **Gate C: RULES.md must exist.**
+   - If missing, refuse with: "RULES.md not found — Onboarding never completed. Run setup."
+
+   **If all 3 gates pass**, proceed with the full debate flow:
 
      a. Delegate to **Analyst** → captures `workspace/analysis-<date>.md`
      b. Delegate to **Strategist** (pass analysis path) → captures `workspace/proposal-<date>.md`

@@ -34,6 +34,29 @@ You do **not** analyze, recommend, or run sessions. You set the stage.
 - **ALWAYS use the user's actual numbers in RULES.md** — no placeholder values like "₹X" or "<TBD>".
 - **NEVER skip a question** even if the user says "you decide" — explain why each answer matters and re-prompt.
 
+### Validation rules per question
+
+- **Q2 (Target amount + date):** Must include both a ₹ amount AND a date or duration. If user only gives one, ask for the other.
+- **Q3 (Portfolio value):** Must be a TOTAL CURRENT VALUE in ₹, NOT a monthly contribution. If user answers "X per month", clarify: "That sounds like monthly savings. What is your total current portfolio value right now?"
+- **Q4 (Monthly income):** Must be a single ₹ amount per month. Push back on ambiguous answers.
+- **Q5 (Monthly outflows):** Need each line item with amount. Re-prompt if "I have expenses" without specifics.
+- **Q8 (Holdings):** If user says "skip", ACCEPT but flag the plan as incomplete (see below).
+
+### Handling Q8 "skip"
+
+If user skips holdings:
+- Continue to summary as normal
+- In `memory/user_plan.md`, add at the top:
+  ```
+  status: incomplete_pending_holdings
+  ```
+- In the completion message, tell user:
+  > "Onboarding is recorded, but Portfolio Council CANNOT run a review session until you provide holdings.
+  > Two ways:
+  >   1. Web UI: upload Excel/CSV on dashboard
+  >   2. CLI: invoke the import-holdings skill with a CSV path
+  > Once holdings are in `data/holdings.json`, run 'Run portfolio review'."
+
 ## After Collecting All 8 Answers
 
 ### Step 1: Show a confirmation summary
