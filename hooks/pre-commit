@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+"""
+Portfolio Council — pre-commit governance hook.
+
+Blocks any commit that adds/modifies a rebalance report (reports/<date>-rebalance.md)
+unless the matching Risk verdict (workspace/verdict-<date>.md) contains the literal
+token 'APPROVE'.
+
+This is governance enforcement at the git layer. The Risk Officer's verdict is
+not advisory — it gates the commit itself.
+
+Install: from repo root, run once:
+    git config core.hooksPath hooks/
+
+After that, this hook fires automatically on every `git commit`.
+"""
+
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+def staged_files() -> list[str]:
+    """Return list of files staged for commit."""
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [f for f in result.stdout.split("\n") if f]
+
+
+def check_rebalance(rebalance_file: str) -> tuple[bool, str]:
+    """
+    Validate that a rebalance report commit has Risk approval.
+    Returns (allowed, reason).
+    """
+    match = re.search(r"reports/(\d{4}-\d{2}-\d{2})-rebalance\.md$", rebalance_file)
+    if not match:
+        return (
+            False,
+            f"Rebalance file '{rebalance_file}' has non-standard name. "
+            f"Expected reports/YYYY-MM-DD-rebalance.md",
+        )
+
+    date = match.group(1)
+    verdict_path = Path(f"workspace/verdict-{date}.md")
+
+    if not verdict_path.exists():
+        return (
+            False,
+            f"Missing Risk verdict at {verdict_path}.\n"
+            f"  → Every rebalance commit requires a verdict file from the Risk agent.\n"
+            f"  → Run the Risk Officer for date {date} before committing.",
+        )
+
+    verdict_text = verdict_path.read_text(encoding="utf-8")
+
+    # The Risk Officer's SOUL.md mandates the literal token 'APPROVE'
+    # in Section 1 (Verdict) when they approve a proposal.
+    if "APPROVE" not in verdict_text:
+        return (
+            False,
+            f"Risk verdict at {verdict_path} does not contain 'APPROVE'.\n"
+            f"  → Found verdicts of: {extract_verdicts(verdict_text)}\n"
+            f"  → Either: (a) re-run Strategist with amendments and re-review,\n"
+            f"            (b) commit as a VETOED record instead of an approved rebalance.",
+        )
+
+    return (True, f"Risk APPROVED rebalance {date} (verdict at {verdict_path})")
+
+
+def extract_verdicts(text: str) -> str:
+    """Best-effort extraction of which verdict tokens appear."""
+    tokens = []
+    for word in ("APPROVE", "VETO", "AMEND"):
+        if word in text:
+            tokens.append(word)
+    return ", ".join(tokens) if tokens else "no verdict token found"
+
+
+def main() -> int:
+    staged = staged_files()
+    rebalances = [
+        f for f in staged
+        if f.startswith("reports/") and f.endswith("-rebalance.md")
+    ]
+
+    if not rebalances:
+        # Not a rebalance commit — let it through.
+        return 0
+
+    all_ok = True
+    print()
+    print("=" * 60)
+    print("Portfolio Council — pre-commit governance check")
+    print("=" * 60)
+
+    for rb_file in rebalances:
+        ok, reason = check_rebalance(rb_file)
+        if ok:
+            print(f"  ✓ {rb_file}")
+            print(f"    {reason}")
+        else:
+            print(f"  ✗ BLOCKED: {rb_file}")
+            for line in reason.split("\n"):
+                print(f"    {line}")
+            all_ok = False
+
+    print("=" * 60)
+    if all_ok:
+        print("Governance check passed. Proceeding with commit.")
+        return 0
+    else:
+        print("Commit BLOCKED. Fix the issues above and try again.")
+        print()
+        print("To bypass (NOT RECOMMENDED — only for emergencies):")
+        print("    git commit --no-verify")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
