@@ -1,6 +1,11 @@
 ---
 name: analyze-holdings
 description: Run holdings analysis script and capture per-stock metrics (current value, P/L, concentration).
+confidence: 1
+usage_count: 1
+success_count: 1
+failure_count: 0
+negative_examples: []
 ---
 
 Skill: analyze-holdings
