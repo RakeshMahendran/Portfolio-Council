@@ -38,6 +38,14 @@ export default function Dashboard() {
   const [streamLog, setStreamLog] = useState<StreamMsg[]>([]);
   const [running, setRunning] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [branches, setBranches] = useState<{ current: string; all: string[] }>({
+    current: "main",
+    all: ["main"],
+  });
+  const [forkDialogOpen, setForkDialogOpen] = useState(false);
+  const [forkName, setForkName] = useState("");
+  const [forkBusy, setForkBusy] = useState(false);
+  const [revertBusy, setRevertBusy] = useState(false);
 
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -48,9 +56,94 @@ export default function Dashboard() {
     setCommits(data.commits ?? []);
   };
 
+  const refreshBranches = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/branches`);
+      const data = await res.json();
+      setBranches({ current: data.current, all: data.all });
+    } catch (e) {
+      console.error("Failed to fetch branches:", e);
+    }
+  };
+
   useEffect(() => {
     refreshLog();
+    refreshBranches();
   }, []);
+
+  const forkAgent = async () => {
+    const trimmed = forkName.trim();
+    if (!trimmed) return;
+    setForkBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/fork`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Fork failed: ${err.detail ?? res.statusText}`);
+        return;
+      }
+      setForkDialogOpen(false);
+      setForkName("");
+      await refreshBranches();
+      await refreshLog();
+    } finally {
+      setForkBusy(false);
+    }
+  };
+
+  const switchBranch = async (branch: string) => {
+    if (branch === branches.current) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/checkout`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ branch }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Checkout failed: ${err.detail ?? res.statusText}`);
+        return;
+      }
+      await refreshBranches();
+      await refreshLog();
+      setSelected(null);
+    } catch (e) {
+      alert(`Checkout error: ${String(e)}`);
+    }
+  };
+
+  const revertCommit = async () => {
+    if (!selected) return;
+    const reason = window.prompt(
+      `Revert commit ${selected.shortHash}?\n\n"${selected.subject}"\n\nOptional reason (captured in the revert commit message):`,
+      "",
+    );
+    if (reason === null) return; // user cancelled
+    setRevertBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/revert`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          commit_hash: selected.hash,
+          reason: reason || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Revert failed: ${err.detail ?? res.statusText}`);
+        return;
+      }
+      await refreshLog();
+      setSelected(null);
+    } finally {
+      setRevertBusy(false);
+    }
+  };
 
   const runSession = async () => {
     if (!prompt.trim()) return;
@@ -112,12 +205,86 @@ export default function Dashboard() {
             powered by gitclaw
           </span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <span>branch: main</span>
-          <span>·</span>
-          <span>{commits.length} sessions</span>
+        <div className="flex items-center gap-3 text-xs">
+          {/* Branch switcher = git checkout */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-zinc-500">branch:</span>
+            <select
+              value={branches.current}
+              onChange={(e) => switchBranch(e.target.value)}
+              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-zinc-100 focus:outline-none focus:border-zinc-600 cursor-pointer"
+              title="git checkout"
+            >
+              {branches.all.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Fork Agent = git checkout -b */}
+          <button
+            onClick={() => setForkDialogOpen(true)}
+            className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-200 transition"
+            title="git checkout -b <name>"
+          >
+            + Fork Agent
+          </button>
+
+          <span className="text-zinc-600">·</span>
+          <span className="text-zinc-500">{commits.length} sessions</span>
         </div>
       </header>
+
+      {/* Fork dialog */}
+      {forkDialogOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          onClick={() => !forkBusy && setForkDialogOpen(false)}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 w-[440px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold mb-2">Fork Agent</h2>
+            <p className="text-xs text-zinc-400 mb-4">
+              Creates a new git branch from current HEAD. Same agent code,
+              independent decision history. Try{" "}
+              <code className="text-zinc-300">aggressive-me</code> or{" "}
+              <code className="text-zinc-300">tax-aware</code>.
+            </p>
+            <input
+              type="text"
+              autoFocus
+              value={forkName}
+              onChange={(e) => setForkName(e.target.value)}
+              placeholder="branch name (e.g. aggressive-me)"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-zinc-600 mb-4"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") forkAgent();
+                if (e.key === "Escape") setForkDialogOpen(false);
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setForkDialogOpen(false)}
+                disabled={forkBusy}
+                className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={forkAgent}
+                disabled={forkBusy || !forkName.trim()}
+                className="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-500 rounded font-semibold"
+              >
+                {forkBusy ? "Creating…" : "git checkout -b"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-12 gap-4 p-4 h-[calc(100vh-56px)]">
         {/* LEFT: Session list (= git log) */}
@@ -174,9 +341,21 @@ export default function Dashboard() {
           <div className="overflow-y-auto flex-1 p-4">
             {selected ? (
               <div>
-                <h2 className="font-semibold text-base">{selected.subject}</h2>
-                <div className="mt-1 text-xs text-zinc-500">
-                  {selected.author} · {new Date(selected.date).toLocaleString()}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-semibold text-base">{selected.subject}</h2>
+                    <div className="mt-1 text-xs text-zinc-500">
+                      {selected.author} · {new Date(selected.date).toLocaleString()}
+                    </div>
+                  </div>
+                  <button
+                    onClick={revertCommit}
+                    disabled={revertBusy}
+                    className="shrink-0 px-2.5 py-1 text-xs bg-red-900/40 hover:bg-red-900/60 border border-red-800 rounded text-red-300 disabled:opacity-50 transition"
+                    title="git revert"
+                  >
+                    {revertBusy ? "Reverting…" : "↶ Revert decision"}
+                  </button>
                 </div>
                 <pre className="mt-4 whitespace-pre-wrap text-xs text-zinc-300 leading-relaxed">
                   {selected.body || "(no body)"}
