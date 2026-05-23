@@ -59,10 +59,10 @@ That's exactly what an institutional investment committee provides — and exact
 - Manages ₹2L–₹50L portfolio on Zerodha/Groww/Upstox
 - Has a real financial goal (house, retirement, child's education)
 - Uses Excel/Notion to track plans, gets advice from Twitter/YouTube
-- Comfortable with terminal/CLI tools (for MVP); web/mobile users in v2
+- **Accesses the product via web UI** (chat dashboard at localhost or self-hosted). Power users / developers can also use the CLI directly.
 - Wants institutional rigor without paying ₹50K/year
 
-Post-MVP: Independent investment advisors managing 5–50 client portfolios.
+Post-MVP: Independent investment advisors managing 5–50 client portfolios. Native mobile app in v4.
 
 ---
 
