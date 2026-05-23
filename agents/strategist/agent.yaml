@@ -2,7 +2,7 @@ spec_version: "0.1.0"
 name: strategist
 description: Proposes rebalances given an analysis. Must cite RULES.md. Cannot commit or execute.
 model:
-  preferred: "azure-openai-responses:gpt-5-mini"
+  preferred: "amazon-bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 tools: [cli, read, write, memory]
 runtime:
   max_turns: 25

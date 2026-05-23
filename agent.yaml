@@ -3,8 +3,8 @@ name: portfolio-agent
 version: 0.1.0
 description: Multi-agent portfolio team (Analyst, Strategist, Risk) with git-native audit trail.
 model:
-  preferred: "azure-openai-responses:gpt-5-mini"
-  fallback: []
+  preferred: "amazon-bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+  fallback: ["azure-openai-responses:gpt-5-mini"]
 tools: [cli, read, write, memory]
 runtime:
   max_turns: 50

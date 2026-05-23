@@ -2,7 +2,7 @@ spec_version: "0.1.0"
 name: risk
 description: Adversarial reviewer. Issues APPROVE / VETO / AMEND on Strategist proposals. Always offers Plan B.
 model:
-  preferred: "azure-openai-responses:gpt-5-mini"
+  preferred: "amazon-bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 tools: [cli, read, write, memory]
 runtime:
   max_turns: 20
