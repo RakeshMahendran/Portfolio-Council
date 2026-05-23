@@ -77,6 +77,8 @@ export default function Dashboard() {
   const [selected, setSelected] = useState<Commit | null>(null);
   const [streamLog, setStreamLog] = useState<StreamMsg[]>([]);
   const [running, setRunning] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
 
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -91,7 +93,7 @@ export default function Dashboard() {
     refreshLog();
   }, []);
 
-  const runAction = async (action: CanonicalAction) => {
+  const runWithPrompt = async (prompt: string) => {
     setRunning(true);
     setStreamLog([]);
 
@@ -99,7 +101,7 @@ export default function Dashboard() {
       const res = await fetch(`${API_BASE}/api/run`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: action.prompt }),
+        body: JSON.stringify({ prompt }),
       });
 
       if (!res.body) {
@@ -136,6 +138,15 @@ export default function Dashboard() {
       setRunning(false);
       refreshLog();
     }
+  };
+
+  const runAction = (action: CanonicalAction) => {
+    runWithPrompt(action.prompt);
+  };
+
+  const runCustomPrompt = () => {
+    if (!customPrompt.trim()) return;
+    runWithPrompt(customPrompt);
   };
 
   return (
@@ -222,9 +233,10 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Canonical Actions */}
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-3">
-                    Choose an action
+                    Quick actions
                   </label>
                   <div className="space-y-3">
                     {CANONICAL_ACTIONS.map((action) => (
@@ -255,6 +267,51 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
+
+                {/* Collapsible Custom Prompt */}
+                <div className="pt-2 border-t border-zinc-800">
+                  <button
+                    onClick={() => setShowCustomPrompt(!showCustomPrompt)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 rounded transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">
+                        {showCustomPrompt ? "▼" : "▶"}
+                      </span>
+                      <span className="uppercase tracking-wider">
+                        Advanced: Custom prompt
+                      </span>
+                    </span>
+                    <span className="text-zinc-600">
+                      {showCustomPrompt ? "Hide" : "Show"}
+                    </span>
+                  </button>
+
+                  {showCustomPrompt && (
+                    <div className="mt-3 space-y-3 px-1">
+                      <textarea
+                        className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded p-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                        placeholder="e.g. Compare my portfolio with NIFTY 50 returns over the last 6 months."
+                        value={customPrompt}
+                        onChange={(e) => setCustomPrompt(e.target.value)}
+                        disabled={running}
+                      />
+                      <button
+                        onClick={runCustomPrompt}
+                        disabled={running || !customPrompt.trim()}
+                        className="w-full px-4 py-2 bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 disabled:text-zinc-500 rounded text-sm font-semibold transition"
+                      >
+                        {running ? "Running…" : "▶ Run custom prompt"}
+                      </button>
+                      <div className="text-xs text-zinc-500 leading-relaxed">
+                        Use custom prompts for advanced queries not covered by quick actions.
+                        The agent has full context and can handle any portfolio-related question.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer note */}
                 <div className="text-xs text-zinc-500 pt-2 border-t border-zinc-800">
                   Each action runs gitclaw with a specific prompt. Watch the Live Activity
                   panel (right) to see the agent&apos;s work in real-time.
