@@ -25,8 +25,11 @@ export default function Dashboard() {
   const [running, setRunning] = useState(false);
   const [prompt, setPrompt] = useState("");
 
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+
   const refreshLog = async () => {
-    const res = await fetch("/api/log");
+    const res = await fetch(`${API_BASE}/api/log`);
     const data = await res.json();
     setCommits(data.commits ?? []);
   };
@@ -41,7 +44,7 @@ export default function Dashboard() {
     setStreamLog([]);
 
     try {
-      const res = await fetch("/api/run", {
+      const res = await fetch(`${API_BASE}/api/run`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ prompt }),
