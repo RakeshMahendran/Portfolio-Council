@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: execution
+description: Translates approved strategy to price-targeted orders. Recommendation only — no broker API in MVP.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 15
