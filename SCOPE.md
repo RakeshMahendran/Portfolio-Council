@@ -116,17 +116,56 @@ $ gitclaw --dir . --prompt "Run portfolio review"
 [Telegram bot pings the user with the verdict summary]
 ```
 
-### Web UI (optional alternative to CLI)
+### Web UI — a Git Dashboard for Agent Decisions (NOT a chatbot)
 
-Users who don't want to use a terminal can access the same agent flow via a chat UI:
+The web UI is deliberately designed as a **git-visualization dashboard**, not a generic chat interface. Every UI action maps directly to a git operation visible in the repo. The UI exposes — does NOT hide — the git-native nature of the agent.
 
 ```
-1. Run the backend: gitclaw --dir . (in server mode)
-2. Open the Vite + React frontend at http://localhost:5173
-3. Same onboarding flow — but as forms + chat
-4. Trigger sessions from the dashboard
-5. View past reports and the git log in the UI
+1. Run the backend bridge: ./serve.sh (FastAPI → gitclaw subprocess)
+2. Open http://localhost:5173
+3. Dashboard layout:
+
+   ┌───────────────────────────────────────────────────────────────────────────┐
+   │  Portfolio Council                              [main ▾] [Fork agent +]   │
+   ├───────────────┬──────────────────────────────────┬────────────────────────┤
+   │ SESSIONS      │  SESSION DETAIL                   │  LIVE AGENT ACTIVITY  │
+   │ (git log)     │  (commit view)                    │  (file system stream) │
+   │               │                                   │                        │
+   │ ● 2026-05-23  │  Rebalance 2026-05-23             │  ▶ Analyst reading:    │
+   │   APPROVED    │  Approved (A/S/R/E)                │    memory/user_plan   │
+   │   Trim TCS    │  ─────────────────────             │  ✏ Writing:            │
+   │               │  Analyst: TCS at 18% (cap 15%)…   │    workspace/analy…    │
+   │ ● 2026-05-22  │  Strategist: Trim 4% over 3d…     │  ▶ Strategist:         │
+   │   VETOED      │  Risk: APPROVE — drawdown 12%     │    reading proposal…   │
+   │   IT timing   │  Execution: BUY @ ₹1620 limit…    │                        │
+   │               │                                   │                        │
+   │ ● 2026-05-20  │  [Revert this decision]            │                        │
+   │   APPROVED    │  [Replay session]                  │                        │
+   │   …           │                                   │                        │
+   └───────────────┴──────────────────────────────────┴────────────────────────┘
 ```
+
+**Core UI primitives (each maps to a git operation):**
+
+| UI feature | Git operation under the hood | Why it matters |
+|---|---|---|
+| Session list | `git log --oneline` | Decision history visible |
+| Click session → detail | `git show <commit>` | Full deliberation, file diffs |
+| **Fork Agent** button | `git checkout -b <name>` | Create alternate personality (e.g., "aggressive-me") |
+| Branch switcher dropdown | `git checkout <branch>` | Compare your default agent vs experimental |
+| **Revert Decision** button | `git revert <commit>` + new commit | Undo a past trade decision, captured in audit |
+| **Replay Session** button | `git checkout <commit>~1 && re-run agents` | See what agents WOULD have said with different rules |
+| Diff view between sessions | `git diff <commit1> <commit2>` | Compare yesterday's vs today's portfolio state |
+| Live activity stream | `inotify` / file system watcher → websocket | Watch agents write files in real time |
+
+**What this UI is NOT:**
+- ❌ A ChatGPT-style "send message → get response" interface
+- ❌ A black-box product where gitclaw is hidden plumbing
+
+**What this UI IS:**
+- ✅ A git client wearing finance-friendly clothes
+- ✅ The hackathon thesis ("agents as repos") made visible to non-CLI users
+- ✅ The CLI flow's exact same operations, exposed as buttons
 
 ---
 
@@ -167,13 +206,27 @@ portfolio-council/
 ├── workspace/                    # Per-session drafts (gitignored)
 ├── scripts/                      # Existing Python (unchanged)
 │
-├── frontend/                     # Vite + React UI (chat + dashboard)
+├── frontend/                     # Vite + React — Git Dashboard UI
 │   ├── src/
+│   │   ├── components/
+│   │   │   ├── SessionList.tsx       # Git log of sessions (sidebar)
+│   │   │   ├── SessionDetail.tsx     # Commit view with full deliberation
+│   │   │   ├── LiveActivityStream.tsx # Real-time file write feed via WS
+│   │   │   ├── BranchSwitcher.tsx    # Switch between agent personalities
+│   │   │   ├── ForkAgentDialog.tsx   # Create new git branch
+│   │   │   ├── RevertButton.tsx      # git revert via UI
+│   │   │   ├── ReplaySession.tsx     # Re-run agents on past state
+│   │   │   └── DiffView.tsx          # Compare two sessions
+│   │   ├── api/                      # FastAPI client
+│   │   └── App.tsx
 │   ├── package.json
-│   └── ...
+│   └── vite.config.ts
 │
-├── server/                       # Thin FastAPI bridge: HTTP ↔ gitclaw
-│   └── main.py
+├── server/                       # FastAPI bridge: HTTP/WS ↔ gitclaw + git
+│   ├── main.py                       # REST endpoints + WebSocket for live stream
+│   ├── git_ops.py                    # log, show, branch, revert, checkout
+│   ├── gitclaw_runner.py             # subprocess invocation + output parsing
+│   └── fs_watcher.py                 # inotify → websocket for live activity
 │
 └── notifications/
     └── telegram_bot.py           # Adapted from FinanceAnalyzer (signal alerts)
@@ -194,11 +247,20 @@ portfolio-council/
 - [ ] Excel holdings upload via Onboarding flow
 - [ ] Execution agent producing price-targeted recommendations
 
-### Phase B — Web UI
-- [ ] **Vite + React frontend** (chat interface + dashboard)
-- [ ] **FastAPI bridge** (HTTP ↔ gitclaw subprocess/SDK)
-- [ ] **Chat-based onboarding flow** (same questions as CLI, but as UI forms)
-- [ ] **Session dashboard** showing past reports + git log
+### Phase B — Git Dashboard UI (NOT a chat UI)
+- [ ] **Vite + React + Tailwind frontend** — 3-pane layout (Sessions / Detail / Live Activity)
+- [ ] **FastAPI bridge** (`server/main.py`) — REST + WebSocket for live file-write stream
+- [ ] **`git_ops.py`** — wraps `log`, `show`, `branch`, `checkout`, `revert`, `diff`
+- [ ] **`gitclaw_runner.py`** — spawns gitclaw subprocess, parses tool-call output
+- [ ] **`fs_watcher.py`** — inotify on `workspace/` + `memory/` → WebSocket events
+- [ ] **Session list view** — git log rendered as cards with verdict status
+- [ ] **Session detail view** — full commit body rendered as deliberation transcript
+- [ ] **Live activity stream** — file reads/writes streamed during a running session
+- [ ] **Fork Agent flow** — modal → name a branch → `git checkout -b`
+- [ ] **Branch switcher** — dropdown to switch between agent personalities
+- [ ] **Revert Decision button** — modal asks for reason → `git revert` with that reason in commit body
+- [ ] **Replay Session button** — `git checkout <commit>~1` + re-run agents, show diff
+- [ ] **Diff view** — pick two sessions, see what changed
 
 ### Phase C — Telegram notifications
 - [ ] **Telegram bot integration** (adapted from FinanceAnalyzer's `telegram_bot.py`)
@@ -241,24 +303,52 @@ portfolio-council/
 
 ## 9. Demo Plan (90-second Loom)
 
+The demo deliberately showcases **the git-native UI features** that you can't get from any other agent product. Every visible moment ties back to a git operation.
+
 ```
-0:00  Title card: "Portfolio Council — your AI board of directors"
-0:05  Open the web UI — user clicks "New Session"
-0:10  Chat onboarding (compressed): 3-4 questions visible
-0:25  User uploads Excel holdings → table renders
-0:30  Click "Run portfolio review"
-0:35  Live debate panel — 5 agents update in real time
-       → Analyst: "TCS at 18%, above 15% cap"
-       → Strategist: "Trim TCS 4%, add HDFCBANK, cash buffer"
-       → Risk: "VETO — drawdown sim shows 24% under stress"
-       → Strategist: "AMEND — execute over 3 days"
-       → Risk: "APPROVE"
-       → Execution: "BUY HDFCBANK at ₹1620 (current ₹1635 — wait for dip)"
-0:55  Telegram notification arrives on phone (side-by-side screen)
-1:00  Open git log — show signed commits across sessions
-1:15  Click a previously VETOED commit — show full deliberation
-1:25  Closing: "Built on gitclaw. Open-source. github.com/<you>/portfolio-council"
+0:00  Title card: "Portfolio Council — your AI investment board, as a git repo"
+
+0:05  Open the dashboard — show the 3-pane layout (Sessions / Detail / Activity)
+      Sidebar already has 4-5 past sessions. The git log IS the activity feed.
+
+0:12  Click "New Session" → live activity stream lights up on the right
+      Watch agents work in real time — files being read, files being written
+       → workspace/analysis-2026-05-23.md (Analyst writing)
+       → workspace/proposal-2026-05-23.md (Strategist writing)
+       → workspace/verdict-2026-05-23.md (Risk writing)
+       → workspace/orders-2026-05-23.md (Execution writing)
+      (~15 sec of visible agent activity)
+
+0:35  Session completes — new card appears in Sessions sidebar
+      Status badge: "APPROVED (A/S/R/E)"
+      Click it → Detail pane shows the full deliberation transcript
+
+0:45  ★ HERO MOMENT — click "Fork Agent" ★
+      Modal: "Create alternate personality. Name: ____"
+      Type "aggressive-me" → creates git branch
+      Branch switcher (top right) now shows: main ▾  ↔  aggressive-me
+
+0:55  Switch to aggressive-me, re-run the same review
+      Sidebar shows TWO timelines side by side now (default vs aggressive)
+      Same data, different agent personality → different recommendations
+      "I just A/B-tested my investment thesis with my own AI."
+
+1:08  Click a previously VETOED commit (from earlier in the demo)
+      Show: full deliberation, Risk's reasoning, "Replay Session" button visible
+
+1:15  Telegram screenshot side-by-side: "Verdict APPROVED — Trim TCS 4% over 3d"
+
+1:20  Closing card:
+      "Built on gitclaw. The UI exposes what gitclaw makes possible.
+       github.com/<you>/portfolio-council — open-source."
 ```
+
+**What this demo proves to Lyzr:**
+1. The agents work end-to-end (Phase A)
+2. The UI doesn't hide gitclaw — it celebrates git operations (Phase B)
+3. "Fork your agent" is a real UI feature backed by `git branch` — that's only possible because of gitclaw's architecture
+4. The audit trail is intrinsic, not bolted on
+5. The Telegram bot covers the accessibility/mobile angle (Phase C)
 
 ---
 
@@ -290,15 +380,29 @@ If that works end-to-end, we ship.
 
 ---
 
-## 12. Built with gitclaw
+## 12. Built with gitclaw — and the UI proves it
 
-This product is **built on gitclaw and built using gitclaw**:
+This product is **built on gitclaw, built using gitclaw, and the UI is a visualization of gitclaw**:
 
-- **Build layer**: gitclaw (the agent) writes the SOUL.md / RULES.md / skill / hook files for the product. Every meaningful product artifact is gitclaw-authored, visible in `git log`.
+- **Build layer**: gitclaw (the agent) writes the SOUL.md / RULES.md / sub-agent / skill / hook files for the product. Every meaningful product artifact is gitclaw-authored, visible in `git log`.
+
 - **Runtime layer**: when a user runs Portfolio Council, gitclaw IS the engine running each sub-agent. Same gitclaw binary, different config per agent.
-- **Integration layer**: the web UI and Telegram bot are thin shells around gitclaw — they marshal user input into gitclaw prompts and capture gitclaw output for display.
 
-The product cannot exist without gitclaw. The product was built by gitclaw. That's the hackathon thesis.
+- **UI as gitclaw visualization**: the web dashboard is deliberately designed to **expose** gitclaw's git-native architecture — not hide it. Every UI primitive maps 1:1 to a git operation:
+  - Session list = `git log`
+  - Session detail = `git show <commit>`
+  - Fork Agent = `git checkout -b <new-branch>`
+  - Branch switcher = `git checkout <branch>`
+  - Revert Decision = `git revert <commit>`
+  - Replay Session = `git checkout <commit>~1` + agent re-run
+  - Diff view = `git diff <commit1> <commit2>`
+  - Live activity stream = `inotify` on the repo's workspace + memory dirs
+
+  **A judge looking at this UI cannot conclude "gitclaw is replaceable" — the UI's killer features only make sense BECAUSE the runtime is gitclaw.**
+
+- **Telegram bot** is a lightweight accessibility layer — sends verdict summaries via DM. Marshals minimal data; does not hide gitclaw.
+
+The product cannot exist without gitclaw. The product was built by gitclaw. The UI is a window into gitclaw. That's the hackathon thesis at three layers.
 
 ---
 
