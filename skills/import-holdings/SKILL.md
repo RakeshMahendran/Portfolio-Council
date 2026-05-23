@@ -1,3 +1,8 @@
+---
+name: import-holdings
+description: Parse uploaded Excel/CSV holdings into data/holdings.json.
+---
+
 Skill: import-holdings
 
 Purpose

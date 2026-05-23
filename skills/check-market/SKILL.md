@@ -1,3 +1,8 @@
+---
+name: check-market
+description: Fetch current NSE/BSE market state — NIFTY, BANKNIFTY, sector trends.
+---
+
 Skill: check-market
 
 Purpose

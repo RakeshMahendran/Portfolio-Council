@@ -1,3 +1,8 @@
+---
+name: analyze-holdings
+description: Run holdings analysis script and capture per-stock metrics (current value, P/L, concentration).
+---
+
 Skill: analyze-holdings
 
 Purpose

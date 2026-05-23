@@ -1,3 +1,8 @@
+---
+name: run-recovery-sim
+description: Run Monte Carlo recovery simulation under historical market shock scenarios.
+---
+
 Skill: run-recovery-sim
 
 Purpose

@@ -1,3 +1,8 @@
+---
+name: generate-pdf
+description: Convert final rebalance markdown report into a PDF for archival.
+---
+
 Skill: generate-pdf
 
 Purpose

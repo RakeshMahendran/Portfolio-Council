@@ -1,3 +1,8 @@
+---
+name: notify-telegram
+description: Send verdict summary to user Telegram via Bot API.
+---
+
 Skill: notify-telegram
 
 Purpose
