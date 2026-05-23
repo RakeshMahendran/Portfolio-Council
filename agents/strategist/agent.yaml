@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: strategist
+description: Proposes rebalances given an analysis. Must cite RULES.md. Cannot commit or execute.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 25
