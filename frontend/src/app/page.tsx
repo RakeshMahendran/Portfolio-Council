@@ -222,40 +222,58 @@ export default function Dashboard() {
   );
 }
 
+// Strip ANSI escape sequences (\x1b[...m, \x1b[K, etc.)
+function stripAnsi(s: string): string {
+  return s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
+}
+
 function StreamEvent({ msg }: { msg: StreamMsg }) {
   const t = msg.type;
-  if (t === "delta") {
+  const text = stripAnsi(String((msg as { text?: string }).text ?? ""));
+
+  if (t === "session_start") {
     return (
-      <span className="text-zinc-300">
-        {String((msg as { content?: string }).content ?? "")}
-      </span>
-    );
-  }
-  if (t === "tool_use") {
-    return (
-      <div className="text-amber-400">
-        ▶ {String((msg as { toolName?: string }).toolName ?? "tool")}
+      <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
+        ▶ session start
       </div>
     );
   }
-  if (t === "tool_result") {
-    return <div className="text-zinc-500 truncate">  └ ok</div>;
-  }
-  if (t === "session_start") {
-    return <div className="text-emerald-500">[session start]</div>;
-  }
   if (t === "session_end") {
-    return <div className="text-emerald-500">[session end]</div>;
+    const rc = (msg as { return_code?: number }).return_code;
+    return (
+      <div className="text-emerald-500 font-semibold border-l-2 border-emerald-500 pl-2 my-1">
+        ✓ session end {typeof rc === "number" ? `(exit ${rc})` : ""}
+      </div>
+    );
+  }
+  if (t === "tool_use") {
+    return <div className="text-amber-400 font-medium">{text}</div>;
+  }
+  if (t === "task_end") {
+    return <div className="text-blue-400">{text}</div>;
+  }
+  if (t === "system") {
+    return <div className="text-purple-400 italic">{text}</div>;
+  }
+  if (t === "error_line") {
+    return <div className="text-red-400">{text}</div>;
   }
   if (t === "error") {
     return (
-      <div className="text-red-400">
+      <div className="text-red-400 font-semibold">
         ✗ {String((msg as { message?: string }).message ?? "error")}
       </div>
     );
   }
-  if (t === "assistant") {
-    return <div className="text-blue-400">[assistant turn complete]</div>;
+  if (t === "output") {
+    // Default agent output — most common type. Skip empty lines (just ANSI).
+    if (!text.trim()) return null;
+    return <div className="text-zinc-300 whitespace-pre-wrap">{text}</div>;
   }
-  return <div className="text-zinc-600">[{t}]</div>;
+  // Unknown type — fallback shows type + text for debugging
+  return (
+    <div className="text-zinc-600">
+      [{t}] {text}
+    </div>
+  );
 }
