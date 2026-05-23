@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: onboarding
+description: First-time setup agent. Asks user 8 questions, writes memory/user_plan.md, generates RULES.md.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 30
