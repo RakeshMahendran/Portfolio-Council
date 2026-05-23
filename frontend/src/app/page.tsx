@@ -56,7 +56,6 @@ export default function Dashboard() {
     if (!prompt.trim()) return;
     setRunning(true);
     setStreamLog([]);
-    console.log("[DEBUG] runSession started with prompt:", prompt);
 
     try {
       const res = await fetch(`${API_BASE}/api/run`, {
@@ -64,10 +63,8 @@ export default function Dashboard() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      console.log("[DEBUG] fetch response:", res.status, res.ok);
 
       if (!res.body) {
-        console.log("[DEBUG] No response body!");
         setStreamLog([{ type: "error", message: "No response body" }]);
         return;
       }
@@ -75,40 +72,24 @@ export default function Dashboard() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let chunkCount = 0;
-      let msgCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          console.log(
-            `[DEBUG] stream done. chunks=${chunkCount} msgs=${msgCount}`,
-          );
-          break;
-        }
-        chunkCount++;
-        const chunk = decoder.decode(value, { stream: true });
-        console.log(
-          `[DEBUG] chunk #${chunkCount} (${chunk.length} bytes):`,
-          chunk.slice(0, 200),
-        );
-        buffer += chunk;
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.trim()) continue;
           try {
             const msg = JSON.parse(line) as StreamMsg;
-            msgCount++;
-            console.log(`[DEBUG] msg #${msgCount}:`, msg);
             setStreamLog((prev) => [...prev, msg]);
-          } catch (parseErr) {
-            console.warn("[DEBUG] failed to parse line:", line, parseErr);
+          } catch {
+            // skip malformed JSON (partial line during streaming)
           }
         }
       }
     } catch (err) {
-      console.error("[DEBUG] runSession error:", err);
       setStreamLog((prev) => [
         ...prev,
         { type: "error", message: String(err) },
@@ -265,7 +246,6 @@ function stripAnsi(s: string): string {
 }
 
 function StreamEvent({ msg }: { msg: StreamMsg }) {
-  console.log("[DEBUG StreamEvent] rendering:", msg.type, msg);
   // TypeScript now knows exactly which properties exist for each type!
   switch (msg.type) {
     case "session_start":
