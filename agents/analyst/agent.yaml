@@ -1,0 +1,8 @@
+spec_version: "0.1.0"
+name: analyst
+description: Observation-only agent. Reads holdings + market, produces structured analysis. Never recommends.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 20
