@@ -1,0 +1,10 @@
+spec_version: "0.1.0"
+name: portfolio-agent
+version: 0.1.0
+description: Multi-agent portfolio team (Analyst, Strategist, Risk) with git-native audit trail.
+model:
+  preferred: "azure-openai-responses:gpt-5-mini"
+  fallback: []
+tools: [cli, read, write, memory]
+runtime:
+  max_turns: 50
