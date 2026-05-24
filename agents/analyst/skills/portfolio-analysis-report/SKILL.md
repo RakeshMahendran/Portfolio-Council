@@ -4,8 +4,8 @@ description: Generate comprehensive portfolio analysis report including holdings
 learned_from: task:6b89a154-ef82-4881-bb76-adf29878fae3
 learned_at: '2026-05-23T19:04:45.361Z'
 confidence: 1
-usage_count: 1
-success_count: 1
+usage_count: 3
+success_count: 3
 failure_count: 0
 negative_examples: []
 ---
