@@ -16,6 +16,9 @@ import {
 import { toast } from "sonner";
 import GoalProgress from "@/components/GoalProgress";
 import SiteHeader from "@/components/SiteHeader";
+import { AgentSummaryGrid } from "@/components/visuals/AgentSummaryGrid";
+import { MilestoneTable } from "@/components/visuals/MilestoneTable";
+import { TodaysActionHero } from "@/components/visuals/TodaysActionHero";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -63,6 +66,7 @@ export default function Home() {
     current?: number;
     date?: string;
   } | null>(null);
+  const [planRaw, setPlanRaw] = useState<string | null>(null);
   const [holdingsAbsentByDesign, setHoldingsAbsentByDesign] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
@@ -123,6 +127,7 @@ export default function Home() {
             current: parseInr(p.parsed.portfolioValue),
             date: p.parsed.targetDate,
           });
+          setPlanRaw(p.raw);
           setHoldingsAbsentByDesign(holdingsEmptyByDesign(p.raw));
         } catch {
           if (!cancelled) setGoal({});
@@ -273,13 +278,19 @@ export default function Home() {
           </div>
         )}
 
-        {/* Goal section */}
+        {/* ── Today's action — the highest-priority signal ────────────── */}
+        <TodaysActionHero />
+
+        {/* ── Goal at a glance ────────────────────────────────────────── */}
         <section>
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-zinc-500" />
             <h2 className="text-xs uppercase tracking-wider text-zinc-500">
               Your goal
             </h2>
+            {holdingsAbsentByDesign && (
+              <StatusBadge variant="neutral">portfolio is cash/FD only</StatusBadge>
+            )}
           </div>
           <GoalProgress
             targetAmount={goal?.target}
@@ -289,39 +300,32 @@ export default function Home() {
           />
         </section>
 
-        {/* Quick actions */}
+        {/* ── Long-horizon milestones ─────────────────────────────────── */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs uppercase tracking-wider text-zinc-500">
-              Quick actions
-            </h2>
-            {!status.hasHoldings && !holdingsAbsentByDesign && (
-              <StatusBadge variant="warning">holdings needed</StatusBadge>
-            )}
-            {holdingsAbsentByDesign && (
-              <StatusBadge variant="neutral">portfolio is cash/FD only</StatusBadge>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ActionCard
-              href="/session?prompt=Run+a+complete+portfolio+review+session+for+today."
-              icon={Play}
-              title="Run portfolio review"
-              description="Full debate: Analyst → Strategist → Risk → Execution"
-              primary
-              disabled={!status.hasHoldings && !holdingsAbsentByDesign}
-            />
-            <ActionCard
-              href="/session?prompt=Check+my+progress+toward+the+goal.+Show+projected+vs+required+returns."
-              icon={Eye}
-              title="Check goal progress"
-              description="Compare current trajectory with target milestone"
-            />
-            <ActionCard
+          <MilestoneTable planText={planRaw} />
+        </section>
+
+        {/* ── 4 agents' decision at a glance (replaces /session 2×2 grid) ─ */}
+        <AgentSummaryGrid />
+
+        {/* ── Secondary actions ───────────────────────────────────────── */}
+        <section className="border-t border-zinc-900 pt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <SecondaryLink
               href="/profile"
               icon={Settings}
-              title="Profile & data"
-              description="View, edit, or replace your plan, holdings, and rules"
+              label="Profile & data"
+            />
+            <SecondaryLink href="/dev" icon={GitBranch} label="Git log" />
+            <SecondaryLink
+              href="/session"
+              icon={Eye}
+              label="Session viewer"
+            />
+            <SecondaryLink
+              href="/session?prompt=Run+a+complete+portfolio+review+session+for+today."
+              icon={Play}
+              label="Run new review"
             />
           </div>
         </section>
@@ -347,6 +351,26 @@ function SiteFooter() {
         Developer view
       </Link>
     </footer>
+  );
+}
+
+function SecondaryLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-lg border border-zinc-800 hover:border-zinc-600 bg-zinc-900/30 hover:bg-zinc-900/60 px-3 py-2.5 text-sm text-zinc-300 hover:text-zinc-100 transition"
+    >
+      <Icon className="w-4 h-4 text-zinc-500" />
+      <span>{label}</span>
+    </Link>
   );
 }
 

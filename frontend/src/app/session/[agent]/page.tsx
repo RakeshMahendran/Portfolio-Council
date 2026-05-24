@@ -1,7 +1,14 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, ChevronRight, FileWarning, Loader2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  FileWarning,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -70,6 +77,7 @@ function AgentDetailInner() {
   const [filename, setFilename] = useState<string | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [userPlanContent, setUserPlanContent] = useState<string | null>(null);
+  const [showTechnical, setShowTechnical] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -192,14 +200,42 @@ function AgentDetailInner() {
 
           {content && !loading && (
             <>
-              {/* Visual layer above the markdown — what a layperson reads first */}
+              {/* Visual layer is the PRIMARY view for the layperson */}
               <AgentVisuals
                 agent={agent}
                 content={content}
                 userPlanContent={userPlanContent}
               />
-              <div className="border border-zinc-800 rounded-lg p-6 bg-zinc-900/30">
-                <MarkdownView content={content} />
+
+              {/* The full markdown is the audit-trail / for-the-next-agent
+                  content. Collapsed by default so it doesn't dominate the
+                  visual story. */}
+              <div className="border border-zinc-800 rounded-lg bg-zinc-900/30">
+                <button
+                  type="button"
+                  onClick={() => setShowTechnical((v) => !v)}
+                  className="w-full flex items-center justify-between px-5 py-3 hover:bg-zinc-900/50 transition rounded-t-lg"
+                  aria-expanded={showTechnical}
+                >
+                  <span className="flex items-center gap-2 text-sm text-zinc-300">
+                    <FileText className="w-4 h-4 text-zinc-500" />
+                    <span className="font-medium">Full audit-trail report</span>
+                    <span className="text-xs text-zinc-500 ml-1">
+                      ({content.split("\n").length.toLocaleString()} lines · for {meta.name} agent's full reasoning)
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={clsx(
+                      "w-4 h-4 text-zinc-500 transition-transform",
+                      showTechnical && "rotate-180",
+                    )}
+                  />
+                </button>
+                {showTechnical && (
+                  <div className="px-6 pb-6 pt-2 border-t border-zinc-800/50">
+                    <MarkdownView content={content} />
+                  </div>
+                )}
               </div>
             </>
           )}
