@@ -2,341 +2,394 @@
 
 **Session Type:** INITIAL ALLOCATION (First Portfolio Construction)  
 **Status:** APPROVED by Risk Officer  
-**Decision:** Deploy ₹2.5L (25% of corpus) in Tranche 1; ₹7.5L retained in FD pending Tranche 2 & 3
+**Decision:** Deploy ₹2.5L (25% of corpus) in Tranche 1, retain ₹7.5L (75%) in FD  
+**Verdict Confidence:** 88%  
+**Agents Participated:** Analyst → Strategist → Risk → Execution
 
 ---
 
 ## Executive Summary
 
-**User Profile:**
-- Goal: ₹1,00,00,000 retirement corpus by 2055 (30-year horizon)
-- Starting Position: ₹10,00,000 in FD (100% cash, zero equity exposure)
-- Risk Tolerance: Low
-- Monthly Investable Surplus: ₹75,000
+Portfolio Council conducted its first complete session for user's 30-year retirement goal (₹1 crore by 2055). Current portfolio is 100% Fixed Deposit (₹10L, zero equity exposure). **Risk Officer APPROVED Tranche 1 initial allocation** of ₹2,49,504 (25% corpus) split across:
+- **LIQUIDBEES** ₹1,00,000 (10%) — establishes emergency buffer
+- **NIFTYBEES** ₹74,504 (7.5%) — core diversified large-cap equity
+- **ICICI Pru BAF** ₹75,000 (7.5%) — conservative hybrid fund
+- **FD retained** ₹7,50,496 (75%) — safety buffer for Tranches 2 & 3
 
-**Session Outcome:**
-Portfolio Council conducted first-ever portfolio review for new user starting from 100% FD position. After Analyst → Strategist → Risk (AMEND) → Strategist v2 → Risk (APPROVE) → Execution flow, approved a **conservative phased deployment** strategy:
+This moves portfolio from 0% → **11.25% effective equity exposure** (7.5% direct + ~3.75% via BAF's dynamic equity component), appropriate for a low-risk investor with 30-year horizon taking first equity step.
 
-- **Tranche 1 (Today, May 24):** Deploy ₹2.5L (25% corpus) into LIQUIDBEES, NIFTYBEES, ICICI Pru BAF
-- **Tranche 2 (June 24, +30 days):** Deploy additional ₹2.5L (cumulative 50%)
-- **Tranche 3 (July 24, +60 days):** CONDITIONAL deployment of remaining ₹5L IF market stabilizes (VIX <16, breadth >14/20)
-- **Ongoing SIP:** ₹60K/month starting June 2026 (NIFTYBEES ₹25K, ICICI Pru BAF ₹25K, LIQUIDBEES ₹10K)
-
-**Key Decision Rationale:**
-Given user's low risk tolerance and 30-year horizon, Council prioritized gradual equity exposure over aggressive deployment. Market conditions on May 24 (VIX 17.91, weak breadth 8/19 green) argued for staged entry rather than lump-sum. Phased approach allows course-correction at 30-day and 60-day checkpoints while maintaining psychological safety via 75% → 50% FD buffer.
+**All 7 Hard Rules PASS. All 3 applicable Soft Rules aligned. 5 adversarial concerns raised by Risk; Plan B-2 (lock in Tranche 2/3 schedule) strongly recommended for goal progress.**
 
 ---
 
-## 1. Market Context (from Analyst)
+## 1. Market Context (Analyst)
 
-**Timestamp:** May 24, 2026, 2:39 PM IST
+**Timestamp:** 2026-05-24, 03:43 PM IST
 
-**Index Levels:**
-- NIFTY 50: 23,749 (+0.31% intraday)
-- BANKNIFTY: 54,055 (+1.15%)
-- India VIX: 17.91 (+0.5% vs yesterday) → MODERATE FEAR
-- Market Breadth: 8 green / 11 red (WEAK despite headline green)
-- Last 30min trend: UP
+### Current Portfolio
+- **Total Value:** ₹10,00,000
+- **Holdings:** 100% Fixed Deposit (zero tradeable equity)
+- **Liquidity:** ₹10,00,000 (1,333% of ₹75K minimum requirement)
+- **Goal Progress:** 10% complete (₹10L / ₹1Cr target by 2055)
+- **Monthly Investable Surplus:** ₹75,000 (from user plan)
 
-**Sector Performance:**
-- Banks: +1.15% (outperforming)
-- IT: -0.37%
-- Pharma: -1.27% (lagging)
-- Metal: +0.44%
+### Market State
+- **NIFTY 50:** 23,749 (+0.31% intraday; open 23,676)
+- **BANKNIFTY:** 54,055 (+1.15% — strongest sector)
+- **India VIX:** 17.91 (+0.5%) — MODERATE FEAR (above calm <15 threshold)
+- **Market Breadth:** 8/19 advancing, 11 declining in Nifty top-20 sample — **WEAK BREADTH** (narrow rally driven by banking)
+- **Sector Trends:** Banking +1.15%, Metal +0.44% | IT -0.37%, Pharma -1.27% (weakest)
 
-**Global Cues:**
-- S&P 500: 7,473 (+0.37%)
-- NASDAQ: 26,344 (+0.19%)
-- Gold: $4,523 (-0.37%)
-- Crude: $96.60 (+0.26%)
+**Analyst Verdict:** Market shows divergence — positive headline index (+0.31%) masks underlying weakness (11 of 19 stocks declining). VIX at 17.91 signals caution. Banking sector strength vs IT/Pharma drag. **CONDITIONAL GO** — smaller tranche advised given mixed signals.
 
-**Analyst's Verdict:**
-"CONDITIONAL GO — Deploy smaller tranche (2/4 signals positive). Headline index green but breadth weak; VIX elevated. Not a screaming-sell environment but caution warranted."
-
----
-
-## 2. Strategist's Proposal (v2, Post-Amendment)
-
-**Initial Proposal (v1):**
-Deploy ₹5L (50% corpus) in single tranche today: ₹1.5L NIFTYBEES, ₹2L LIQUIDBEES, ₹1.5L hybrid fund, ₹5L FD retained.
-
-**Risk Officer AMEND Verdict (v1):**
-Rejected v1 for 4 weaknesses:
-1. No staged deployment (market timing risk given VIX 17.91 and weak breadth)
-2. No explicit fund selection (said "Balanced Advantage Fund*" without ISIN)
-3. No SIP contingency clause (what if income drops?)
-4. No stress test (recovery_sim.py unavailable)
-
-**Revised Proposal (v2):**
-Addressed all 4 amendments:
-1. ✅ **Staged deployment:** 3 tranches over 60 days (25% today, 50% by day 30, conditional 100% by day 60)
-2. ✅ **Fund locked in:** ICICI Prudential Balanced Advantage Fund (ISIN: INF109K01VF5, ER 0.98%), with HDFC BAF as fallback
-3. ✅ **SIP contingency:** 6-month checkpoint; reduce to ₹30K if surplus <₹40K; pause if <₹25K
-4. ✅ **Stress test workaround:** Added historical backtest (2008: -11.6% drawdown vs market -60%; 2020: -7.9% vs market -38%) + disclaimer + 12% drawdown contingency
-
-**Strategist's Confidence:** 8.5/10 (upgraded from 7/10 after amendments)
+### Key Observations
+- Zero equity exposure for 30-year goal is overly conservative; inflation erodes FD-only corpus
+- With ₹75K/month investable surplus over 343 months = ₹2.57 crore in contributions alone, goal is highly achievable even at conservative 6-8% returns
+- Low risk tolerance mandates gradual equity introduction rather than lump-sum deployment
 
 ---
 
-## 3. Risk Officer's Final Verdict (v2)
+## 2. Strategic Recommendation (Strategist)
 
-**Verdict: APPROVE**
+### Proposed Action: Tranche 1 Conservative First Deployment
 
-**Hard Rule Compliance:** All 7 hard rules PASS
-- Goal commitment ✓
-- Concentration cap (15%) ✓
-- Liquidity buffer (₹75K minimum) ✓
-- No debt/leverage ✓
-- No speculative instruments ✓
-- No illiquid/penny stocks ✓
-- Low-risk mandate ✓
+| # | Action | Symbol | Qty/Amount | Price | Total INR | Rule Cited | Rationale |
+|---|--------|--------|------------|-------|-----------|------------|-----------|
+| 1 | BUY | LIQUIDBEES | 100 units | ₹1,000 | ₹1,00,000 | Hard Rule #3 | Establish emergency buffer exceeding ₹75K minimum; ultra-liquid overnight fund |
+| 2 | BUY | NIFTYBEES | 278 units | ₹268 (LIMIT) | ₹74,504 | Soft Rules #1 & #2 | Diversified large-cap index; low-cost ER ~0.05%; gradual 7.5% equity start |
+| 3 | BUY | ICICI Pru BAF | Lump-sum | ₹68.50 NAV | ₹75,000 | Hard Rule #7, Soft #2 | Conservative hybrid (50% equity / 50% debt dynamic); ER 0.98%; risk diversification |
+| 4 | RETAIN | Fixed Deposit | — | — | ₹7,50,496 | Hard Rules #3 & #7 | Maintain 75% FD safety net; pending Tranche 2 & 3 |
 
-**Key Risk Concerns Raised:**
-1. **Tranche 3 trigger ambiguity:** VIX <16 AND breadth >14/20 is binary but markets are noisy — what if VIX = 15.9 and breadth = 13/20? Risk noted Strategist's fallback (Ultra-Simple Two-Tranche Plan B) addresses this if needed.
+**Total Deployment:** ₹2,49,504 (25% of ₹10L corpus)  
+**Retained in FD:** ₹7,50,496 (75% safety buffer)
 
-2. **ICICI Pru BAF concentration creep:** ₹75K today + ₹75K day 30 + ₹25K×12 SIP = ₹4.5L by May 2027. At projected ₹18L corpus, this is 25% — **EXCEEDS 15% cap**. **ACTION REQUIRED:** Execution must monitor monthly; if BAF approaches 14%, pause BAF SIP and redirect to NIFTYBEES or liquid fund.
+### Net Portfolio Impact
 
-3. **Phased deployment over-optimization risk:** Deferring ₹5L for 60 days sacrifices 2 months of compounding if market rallies. Risk accepts this trade-off given user's low risk tolerance.
+**Pre-Deployment:**
+- FD: 100% (₹10L)
+- Equity: 0%
+- Liquidity: ₹10L (1,333% of minimum)
 
-**Risk Officer's Confidence:** "The v2 proposal successfully addresses all four AMEND requirements. Phased structure appropriately mitigates market timing risk while maintaining low-risk mandate compliance. Residual risks (BAF concentration, Tranche 3 ambiguity) are manageable via monitoring. Approved."
+**Post-Tranche 1:**
+- FD: 75.0% (₹7.5L)
+- LIQUIDBEES: 10.0% (₹1L)
+- NIFTYBEES: 7.5% (₹74.5K)
+- ICICI Pru BAF: 7.5% (₹75K)
+- **Effective Equity Exposure:** 11.25% (7.5% direct + ~3.75% via BAF)
+- **Liquidity:** ₹8.5L (₹1L ultra-liquid + ₹7.5L FD) = **1,134% of ₹75K minimum** ✅
 
-**Plan B (if market crashes 15%+ within 60 days):**
-- Do NOT execute Tranche 3 even if VIX/breadth conditions met (override discretion)
-- Pause NIFTYBEES SIP for 3 months (continue LIQUIDBEES + BAF SIP)
-- Re-evaluate in Q4 2026
+### Stress Test (Historical Backtest)
 
----
+**Limitation:** Full Monte Carlo `recovery_sim.py` unavailable; using historical scenario approximation.
 
-## 4. Execution Orders (Tranche 1)
+**Scenario 1: 2008-style Crash (-60% Nifty, 12-month recovery)**
+- NIFTYBEES: -60% × ₹74.5K = -₹44.7K
+- ICICI Pru BAF: -25% × ₹75K = -₹18.8K (dynamic allocation cushions)
+- LIQUIDBEES + FD: 0% (capital preservation)
+- **Total Drawdown:** -₹63.5K on ₹10L = **-6.3%**
+- **Post-Crash Liquidity:** ₹8.32L (1,109% of minimum) ✅
 
-**Deploy Today (May 24, 2026, before 3:30 PM):**
+**Scenario 2: 2020-style Correction (-38% Nifty, 6-month recovery)**
+- **Total Drawdown:** -₹39.6K = **-4.0%**
+- **Post-Crash Liquidity:** ₹8.39L (1,119% of minimum) ✅
 
-| Order | Symbol/Fund | Action | Quantity | Target Price | Amount | Order Type |
-|-------|-------------|--------|----------|--------------|--------|------------|
-| 1 | LIQUIDBEES | BUY | 100 units | ₹1,000.00 | ₹1,00,000 | MARKET |
-| 2 | NIFTYBEES | BUY | 278 units | ₹268.00 | ₹74,504 | LIMIT (Day) |
-| 3 | ICICI Pru BAF | BUY | ₹75,000 | ₹68.50 (est. NAV) | ₹75,000 | Lump-sum MF |
+**Verdict:** Max 6.3% drawdown in worst-case scenario is acceptable for low-risk investor with 30-year horizon. Liquidity buffer remains robust (>1,100% of minimum) even under severe stress.
 
-**Total Tranche 1 Deployment:** ₹2,49,504 (25% of ₹10L corpus)
+### 5 Weaknesses Pre-Identified for Risk Officer
 
-**Sequencing:**
-1. LIQUIDBEES first (establish liquidity buffer)
-2. NIFTYBEES second (ETF requires market hours)
-3. ICICI Pru BAF third (MF order before 3 PM for today's NAV)
+1. **Market Timing Risk:** VIX 17.91 + weak breadth (8/19 green) suggests potential near-term pullback; deploying ₹74.5K into NIFTYBEES at current levels could start underwater.
 
-**Execution Notes:**
-- NIFTYBEES LIMIT order at ₹268 (0.4% below current ₹269.10) captures small intraday dip; if not filled by 3:25 PM, convert to MARKET
-- ICICI Pru BAF NAV (~₹68.50) is estimate; actual NAV published at 11 PM tonight
-- Post-execution: ₹7,50,496 remains in FD (75% safety buffer)
+2. **BAF Concentration Creep:** If ICICI Pru BAF receives ongoing ₹20K/month SIP (per future tranche plan), it could reach 10-12% of portfolio by Tranche 3 completion, approaching concentration cap.
 
-**Day-8 Protocol:** If NIFTYBEES LIMIT order doesn't fill today, convert to MARKET on Monday (May 26). Do NOT wait beyond Tuesday (May 27).
+3. **Opportunity Cost of Deferring ₹7.5L:** Retaining 75% in FD for 6-12 months sacrifices ₹20-40 lakh in compounding over 30 years (equity returns 10-12% vs FD 6-7%).
 
----
+4. **No Fund Selection Contingency:** If ICICI Pru BAF is unavailable on user's platform or closed to new investors, Execution Agent lacks fallback.
 
-## 5. Post-Tranche 1 Portfolio State (Target)
+5. **Tranche 2/3 Triggers Undefined:** Proposal says "over next 6-9 months" but provides no binding dates or market condition triggers, risking indefinite deferral (status quo bias).
 
-| Asset Class | Symbol/Fund | Value | Allocation | Purpose |
-|-------------|-------------|-------|------------|---------|
-| Cash/FD | Fixed Deposit | ₹7,50,496 | 75.0% | Safety net (Tranches 2 & 3 pending) |
-| Liquid | LIQUIDBEES | ₹1,00,000 | 10.0% | Emergency buffer (exceeds ₹75K minimum) |
-| Equity | NIFTYBEES | ₹74,504 | 7.5% | Core large-cap exposure |
-| Hybrid | ICICI Pru BAF | ₹75,000 | 7.5% | Conservative equity+debt mix |
-| **TOTAL** | | **₹10,00,000** | **100%** | |
+### Strategist's Plan B Scenarios
 
-**Key Metrics:**
-- Effective Equity Exposure: 11.25% (7.5% direct + 3.75% via BAF at 50% equity assumption)
-- Liquidity: ₹8,50,496 (₹1L LIQUIDBEES + ₹7.5L FD) = **1,134% of ₹75K minimum** ✓
-- Largest Position: FD at 75% (temporary; drops to 50% post-Tranche 2)
-- Concentration Cap Compliance: ✓ (no single equity/hybrid position >15%)
+- **Plan B-1 (Ultra-Conservative):** If Risk Officer deems market unsuitable, deploy only ₹1.5L (LIQUIDBEES ₹1L + BAF ₹50K), skip NIFTYBEES; re-review in 14 days.
+- **Plan B-2 (Lock In Full Roadmap):** Commit upfront to Tranche 2 (June 24) and Tranche 3 (August 24) with specific triggers (VIX <18 OR Nifty +3%), preventing indefinite delay.
+- **Plan B-3 (Defer to Next Week):** If market deemed too volatile today, defer entire Tranche 1 by 7 days; re-run analysis May 31.
 
 ---
 
-## 6. Next Steps & Calendar Reminders
+## 3. Risk Officer Verdict
 
-### Immediate (Today, May 24, 2026):
-1. ✅ **Place Tranche 1 orders** (before 3:30 PM for NIFTYBEES, before 3:00 PM for ICICI Pru BAF)
-2. ✅ **Update holdings.json** after execution (tomorrow, May 25)
-3. ✅ **Verify FD balance:** Confirm ₹7,50,496 remains in FD
+### Verdict: **APPROVE**
 
-### Tranche 2 (June 24, 2026, +30 days):
-- **UNCONDITIONAL deployment** of additional ₹2.5L:
-  - ₹75K NIFTYBEES (fetch current price)
-  - ₹1L LIQUIDBEES (always ₹1,000)
-  - ₹75K ICICI Pru BAF (fetch current NAV)
-- Post-Tranche 2: 50% FD, 15% NIFTYBEES, 20% LIQUIDBEES, 15% BAF (22.5% effective equity)
-- **Set calendar reminder:** June 24, 9:00 AM — "Portfolio Tranche 2 — Deploy ₹2.5L"
+**One-Line Summary:** Tranche 1 initial allocation (₹2.5L / 25% corpus) is a prudent conservative first step that respects all hard rules, maintains robust liquidity buffer, and appropriately introduces measured equity exposure (11.25%) for a 30-year low-risk investor.
 
-### Tranche 3 (July 24, 2026, +60 days):
-- **CONDITIONAL evaluation:**
-  - Check VIX (<16?) and Nifty breadth (>14/20 green?)
-  - If BOTH met: Deploy remaining ₹5L FD per Strategist's plan (allocation TBD based on July conditions)
-  - If conditions NOT met: Retain ₹5L FD (50% safety net) and re-evaluate in Q4 2026
-- **Set calendar reminder:** July 24, 9:00 AM — "Portfolio Tranche 3 — CONDITIONAL EVALUATION (check VIX & breadth)"
+### Hard Rule Compliance Check
 
-### Monthly SIP (Starting June 5, 2026):
-- **Setup auto-SIP** via broker (one-time setup):
-  - ₹25K/month → NIFTYBEES
-  - ₹25K/month → ICICI Pru BAF
-  - ₹10K/month → LIQUIDBEES
-  - ₹15K/month → FD/Savings
-- **Set recurring reminder:** 5th of every month — "Portfolio SIP — ₹60K Auto-Debit"
+1. ✅ **Goal commitment** — PASS: Transitions from 0% → 11.25% equity, enabling compounding journey toward ₹1Cr by 2055. Goal remains achievable with ₹75K/month contributions.
 
-### 6-Month Checkpoint (December 24, 2026):
-- Verify ₹3.6L SIP commitment met (₹60K × 6 months)
-- Check ICICI Pru BAF allocation % (pause if approaching 14%)
-- Run Q4 2026 portfolio review & rebalance check
-- **Set calendar reminder:** December 24, 9:00 AM — "Portfolio 6-Month SIP Checkpoint + Q4 Review"
+2. ✅ **Concentration cap (15%)** — PASS: Post-deployment: FD 75%, LIQUIDBEES 10%, NIFTYBEES 7.5%, ICICI BAF 7.5%. No single position exceeds cap.
 
----
+3. ✅ **Liquidity buffer (₹75K)** — PASS: Post-deployment liquid funds = ₹8.5L (1,134% of minimum). Even under 2008 stress (-6.3% drawdown), remains >₹8.3L (1,109% of minimum).
 
-## 7. Goal Progress Snapshot
+4. ✅ **No debt/leverage** — PASS: All deployment from existing FD corpus; zero margin or borrowed capital.
 
-| Metric | Current | After Tranche 1 | After 12 Months (Projected) |
-|--------|---------|-----------------|------------------------------|
-| Portfolio Value | ₹10,00,000 | ₹10,00,000 | ₹18,00,000 (includes ₹7.2L SIP + returns) |
-| Goal Target | ₹1,00,00,000 | ₹1,00,00,000 | ₹1,00,00,000 |
-| Completion % | 10% | 10% | 18% |
-| Gap to Goal | ₹90,00,000 | ₹90,00,000 | ₹82,00,000 |
-| Months to Deadline | 358 months | 358 months | 346 months |
-| Required Monthly Progress | ₹25,139 | ₹25,139 | ₹23,699 |
-| Actual Monthly Contribution | ₹0 (FD only) | ₹60,000 (SIP starting June) | ₹60,000 |
-| Pace vs Required | 0× | 2.4× | 2.5× |
+5. ✅ **No speculative instruments** — PASS: LIQUIDBEES (liquid overnight ETF), NIFTYBEES (Nifty 50 index), ICICI Pru BAF (regulated hybrid MF). Zero crypto, F&O, or forex.
 
-**Status:** **ON TRACK** — Monthly SIP contribution (₹60K) is 2.4× the mathematically required pace (₹25K). Conservative allocation (11.25% → 22.5% → conditional 50% equity) maintains low-risk mandate while allowing time-diversified exposure over 30 years.
+6. ✅ **No illiquid/penny stocks** — PASS: All instruments highly liquid (LIQUIDBEES ₹150Cr+ daily volume, NIFTYBEES ₹500Cr+, ICICI BAF daily redemption).
 
----
+7. ✅ **Low-risk mandate** — PASS: 11.25% effective equity exposure is appropriately conservative for first allocation. 75% FD retention provides psychological safety. Max 6.3% drawdown in stress test aligns with low-risk tolerance for 30-year horizon.
 
-## 8. Lessons Learned & Process Notes
+**All 7 Hard Rules PASS. No automatic veto triggered.**
 
-### What Went Well:
-1. **Phased debate flow worked:** Analyst → Strategist → Risk AMEND → Strategist v2 → Risk APPROVE → Execution produced a well-vetted plan. Risk Officer's AMEND verdict (4 specific changes) forced Strategist to address material weaknesses before approval.
+### Soft Rule Considerations
 
-2. **User disclosure transparency:** Strategist's v2 Section 5 ("What You're Paying for Safety") quantified opportunity cost (₹20-40L foregone over 30 years) — exemplary governance that helps user make informed trade-off.
+- ✅ **Soft Rule #1 (Gradual equity exposure):** ALIGNED — Phased tranche approach (25% deployment, 75% retained) builds equity slowly over time.
+- ✅ **Soft Rule #2 (Diversified instruments):** ALIGNED — NIFTYBEES (50 large-caps) and ICICI BAF (diversified hybrid) preferred over stock picking. Low ER (0.05% and 0.98%).
+- ✅ **Soft Rule #4 (Cost consciousness):** ALIGNED — NIFTYBEES ER 0.05% (excellent); ICICI BAF 0.98% (reasonable for active hybrid).
 
-3. **Contingency planning:** Multiple fallbacks (Plan B, Tranche 3 conditions, SIP contingency) ensure plan adapts to changing circumstances without requiring full re-negotiation.
+**3/3 applicable Soft Rules aligned. No documented overrides needed.**
 
-### Process Gaps Identified:
-1. **No Monte Carlo stress test:** `recovery_sim.py` script unavailable. Strategist substituted historical backtest but Risk noted this is provisional approval pending proper stress test implementation within 30 days.
+### 5 Adversarial Concerns (Despite Approval)
 
-2. **Fund selection delayed to v2:** Strategist's v1 deferred fund choice to Execution Agent. Risk correctly flagged this as execution ambiguity. Future sessions should lock in ISINs upfront.
+1. **Market Timing Risk:** VIX 17.91 + narrow breadth (8/19 green) during deployment. Risk of near-term pullback starting NIFTYBEES underwater. **Mitigation:** 75% FD buffer + 30-year horizon absorbs volatility; Execution should consider 3-5 day DCA for NIFTYBEES.
 
-3. **Tranche 3 trigger ambiguity:** "VIX <16 AND breadth >14/20" is binary but real markets are noisy. Risk noted this but approved with fallback (Ultra-Simple Two-Tranche Plan B). If July evaluation proves confusing, execute Plan B.
+2. **BAF Concentration Creep:** If ICICI BAF receives ₹20K/month SIP, could hit 10-12% by Tranche 3. **Recommendation:** Hard rule — if any fund >12%, pause SIP until next rebalance.
 
-### Action Items for Future Sessions:
-1. **Implement `recovery_sim.py`** for Q3 2026 review — Monte Carlo validation is non-negotiable for proposals >5% portfolio movement
-2. **Monthly ICICI Pru BAF tracking:** Set alert if allocation exceeds 13% (predicted 25% by May 2027 due to SIP accumulation)
-3. **Q2 2027 review:** Validate goal progress, rebalance if needed, assess whether Tranche 3 was executed or deferred
+3. **Opportunity Cost of ₹7.5L Deferral:** 75% FD for 6-12 months sacrifices ₹20-40L over 30 years. **Strong Recommendation:** Adopt Plan B-2 to lock in Tranche 2 (June 24) and Tranche 3 (August 24) with binding triggers.
+
+4. **No BAF Fallback:** If ICICI Pru BAF unavailable, Execution blocked. **Requirement:** Execution must verify BAF availability BEFORE starting Tranche 1; if unavailable, STOP and escalate to Strategist for amendment.
+
+5. **Tranche 2/3 Triggers Undefined:** Without binding schedule, user could remain 75% FD indefinitely (status quo bias). **Plan B-2 Mandatory:** Orchestrator must commit to Tranche 2/3 schedule in final report (non-negotiable for goal progress).
+
+### Risk Officer's Plan B Recommendation
+
+**I approve the primary proposal** for Tranche 1 execution, but **strongly endorse Plan B-2** for overall strategy:
+
+**Plan B-2: Lock In Full 3-Tranche Roadmap**
+- **Tranche 1 (Today):** Execute primary proposal (₹2.5L deployment)
+- **Tranche 2 (Auto-trigger by June 24, 2026):**
+  - Trigger: VIX <18 OR Nifty +3% from today (₹23,749 → ₹24,462)
+  - Deploy additional ₹2.5L: NIFTYBEES ₹1L, ICICI BAF ₹1L, LIQUIDBEES ₹50K
+  - Retain: ₹5L FD (50%)
+- **Tranche 3 (Auto-trigger by August 24, 2026):**
+  - Trigger: 60 days post-Tranche 2 OR VIX <15
+  - Deploy final ₹2.5L: NIFTYBEES ₹1.25L, ICICI BAF ₹50K, Debt ETF ₹75K
+  - Retain: ₹2.5L FD (25% stable base)
+- **Final allocation by Q3 2026:** 30% equity, 22.5% hybrid, 7.5% debt ETF, 25% FD, 15% liquid
+
+**Rationale:** Balances psychological safety (phased entry) with goal progress (locked-in timeline). Prevents indefinite deferral.
+
+### Contingencies Required
+
+1. ✅ Execution Agent must verify ICICI Pru BAF availability before starting Tranche 1
+2. ✅ Orchestrator must adopt Plan B-2's Tranche 2/3 schedule in final report (non-negotiable)
+3. ✅ 90-day checkpoint mandatory (August 24, 2026) to confirm full deployment or formally amend
+
+**Verdict Confidence:** 88% (approval is sound; 12% uncertainty due to market timing and lack of real-time `recovery_sim.py` validation)
 
 ---
 
-## 9. User Acknowledgment Required
+## 4. Execution Orders
 
-Before placing Tranche 1 orders, user must acknowledge:
+**Pre-Execution Status:**
+- Risk verdict: ✅ **APPROVE**
+- Current time: 15:56 IST
+- Market status: OPEN (closing auction begins 15:30)
+- Nifty 50: 23,749 (+0.31%)
+- VIX: 17.91 (moderate fear)
 
-✅ **I understand this is a 30-year plan with gradual equity exposure** (11.25% → 22.5% → conditional 50%), not aggressive deployment.
+### Order Details (in execution sequence)
 
-✅ **I accept the ₹20-40L opportunity cost** of maintaining 50-75% FD safety buffer vs higher equity allocation.
+#### Order 1: BUY LIQUIDBEES
+- **Action:** BUY
+- **Symbol:** LIQUIDBEES (NSE)
+- **Quantity:** 100 units
+- **Price:** ₹1,000.00 (MARKET order; NAV stable)
+- **Estimated INR:** ₹1,00,000
+- **Order Type:** MARKET (execute immediately)
+- **Rationale:** Establish ₹1L emergency buffer (Hard Rule #3)
 
-✅ **I commit to ₹60K/month SIP** starting June 2026 (with contingency clause if income drops).
+#### Order 2: BUY NIFTYBEES
+- **Action:** BUY
+- **Symbol:** NIFTYBEES (NSE)
+- **Quantity:** 278 units
+- **Target Price:** ₹268.00 (LIMIT GTC, 3-day validity)
+- **Current Price:** ₹269.10 (as of 15:56 IST)
+- **Estimated INR:** ₹74,504 (278 × ₹268)
+- **Order Type:** LIMIT GTC (Good Till Cancelled)
+- **Rationale:** Wait for small intraday dip; if unfilled by May 27, convert to MARKET
+- **Execution Note:** Core diversified large-cap exposure; ER ~0.05%
 
-✅ **I will set calendar reminders** for Tranche 2 (June 24), Tranche 3 (July 24), and 6-month checkpoint (December 24).
+#### Order 3: BUY ICICI Pru Balanced Advantage Fund
+- **Action:** BUY (Mutual Fund Lump-Sum)
+- **Symbol:** ICICI Pru Balanced Advantage Fund
+- **ISIN:** INF109K01VF5
+- **Amount:** ₹75,000 (lump-sum subscription)
+- **NAV:** ₹68.50 (estimated; actual NAV at 11 PM)
+- **Estimated Units:** ~1,095 units (final depends on actual NAV)
+- **Order Type:** MF LUMP-SUM (must place before 3 PM for same-day NAV)
+- **Rationale:** Conservative hybrid (50% equity / 50% debt); ER 0.98%
+- **CRITICAL:** User must verify BAF availability on their platform BEFORE placing any orders
 
-✅ **I understand stress test is provisional** — if portfolio experiences >12% drawdown in first 6 months, I will pause SIP and re-evaluate.
+#### Order 4: RETAIN FD
+- **Action:** NO ACTION (retain existing position)
+- **Amount:** ₹7,50,496 (75% safety buffer)
+- **Rationale:** Pending Tranche 2 & 3 deployment per Plan B-2 schedule
 
-✅ **I will NOT panic-sell during market downturns** — 30-year horizon allows time for recovery; SIP buys at lower prices during corrections.
+### Post-Execution Verification Checklist
+
+After orders execute, verify:
+1. ✅ LIQUIDBEES 100 units confirmed in holdings @ ₹1,000/unit = ₹1,00,000
+2. ✅ NIFTYBEES 278 units confirmed (or LIMIT pending if unfilled)
+3. ✅ ICICI Pru BAF ₹75,000 investment confirmed (units = ₹75K ÷ actual NAV)
+4. ✅ FD balance = ₹7,50,496 (if NIFTYBEES LIMIT unfilled, FD = ₹8,25,000)
+5. ✅ Total portfolio value = ₹10,00,000 (unchanged; asset reallocation only)
+6. ✅ Liquid funds (LIQUIDBEES + FD) ≥ ₹8,50,496 (1,134% of ₹75K minimum) ✅
+
+### Manual Execution Steps (for user)
+
+**Step 1: Verify ICICI Pru BAF Availability**
+- Log into your demat/MF platform
+- Search for "ICICI Prudential Balanced Advantage Fund" (ISIN: INF109K01VF5)
+- Confirm it's available for new lump-sum investment
+- If NOT available → STOP execution immediately; escalate to Strategist for fallback amendment (do NOT substitute ad-hoc)
+
+**Step 2: Execute Orders**
+1. Place **LIQUIDBEES** MARKET order for 100 units (approx ₹1,00,000)
+2. Place **ICICI Pru BAF** lump-sum order for ₹75,000 (before 3 PM today for same-day NAV)
+3. Place **NIFTYBEES** LIMIT GTC order for 278 units @ ₹268 (3-day validity: expires May 27 if unfilled)
+
+**Step 3: Monitor NIFTYBEES LIMIT Order**
+- **May 25-26 (Sat-Sun):** Markets closed; no action
+- **May 27 (Tuesday):** Check if NIFTYBEES filled at ₹268
+  - If filled → perfect! Execution complete.
+  - If unfilled → convert to MARKET order before 3:25 PM (don't let it expire)
+
+**Step 4: Post-Execution**
+- Run `python scripts/analyze_holdings.py` to capture updated portfolio
+- Verify all 5 checklist items above
+- Update `data/holdings.json` if not auto-synced
 
 ---
 
-## 10. Signed
+## 5. Plan B-2 Commitment (Tranche 2/3 Schedule)
+
+Per Risk Officer's **mandatory contingency**, Portfolio Council commits to the following locked-in schedule for full deployment:
+
+### Tranche 2 — Auto-Trigger by June 24, 2026 (30 days)
+**Trigger Conditions (either/or):**
+- India VIX < 18 (de-escalation from current 17.91), OR
+- Nifty 50 > ₹24,462 (+3% from today's 23,749)
+
+**If Triggered, Deploy Additional ₹2,50,000:**
+- NIFTYBEES: ₹1,00,000 (increase total equity to ~17.5%)
+- ICICI Pru BAF: ₹1,00,000 (increase total hybrid to ~17.5%)
+- LIQUIDBEES: ₹50,000 (boost buffer to ₹1,50,000)
+- **Retain FD:** ₹5,00,496 (50% of corpus)
+
+**Post-Tranche 2 Portfolio:**
+- Equity: 17.5% (NIFTYBEES)
+- Hybrid: 17.5% (ICICI BAF)
+- Liquid: 15% (LIQUIDBEES)
+- FD: 50%
+
+### Tranche 3 — Auto-Trigger by August 24, 2026 (90 days)
+**Trigger Conditions (either/or):**
+- 60 days after Tranche 2 execution, OR
+- India VIX < 15 (calm market conditions)
+
+**If Triggered, Deploy Final ₹2,50,000:**
+- NIFTYBEES: ₹1,25,000 (target 30% total equity)
+- ICICI Pru BAF: ₹50,000 (target 22.5% total hybrid)
+- Debt ETF (e.g., NPGSPGETF): ₹75,000 (diversify debt allocation)
+- **Retain FD:** ₹2,50,496 (25% stable base)
+
+**Target Final Allocation by Q3 2026:**
+- Equity (NIFTYBEES): 30%
+- Hybrid (ICICI BAF): 22.5%
+- Debt ETF: 7.5%
+- Liquid (LIQUIDBEES): 15%
+- FD: 25%
+
+### Enforcement Mechanism
+- **Checkpoint Dates:** June 24 and August 24, 2026 are **mandatory review dates**
+- If user defers Tranche 2/3 beyond 7 days of trigger without cause → Orchestrator flags for review
+- If full deployment not achieved by September 24, 2026 (120 days) → trigger new Risk review to assess strategy course correction
+- **No indefinite deferrals permitted** — Plan B-2 is binding to prevent status quo bias
+
+---
+
+## 6. Session Audit Trail
 
 **Session ID:** Initial Allocation 2026-05-24  
-**Participants:** Analyst, Strategist, Risk Officer, Execution Agent  
-**Date:** May 24, 2026  
-**Time:** 2:39 PM - 3:04 PM IST  
-**Duration:** 25 minutes (Analyst + Strategist + Risk + Execution)
+**Timestamp:** 2026-05-24, 15:34-15:56 IST  
+**Process Flow:** Analyst → Strategist → Risk → Execution (4-agent debate)
 
-**Verdict Summary:**
-- Analyst: CONDITIONAL GO (2/4 market signals positive)
-- Strategist v1: Proposed ₹5L single-tranche deployment
-- Risk v1: **AMEND** (4 changes required)
-- Strategist v2: Revised to phased 3-tranche deployment
-- Risk v2: **APPROVE** (all amendments addressed)
-- Execution: Orders generated for Tranche 1 (₹2.5L)
+### Participants
+1. **Analyst** — Observed ₹10L FD-only portfolio, VIX 17.91, weak market breadth; provided CONDITIONAL GO with smaller tranche advised
+2. **Strategist** — Proposed ₹2.5L Tranche 1 (25% deployment) respecting all 7 Hard Rules; pre-identified 5 weaknesses for Risk challenge
+3. **Risk Officer** — APPROVED with 88% confidence after verifying all Hard Rules PASS; raised 5 adversarial concerns; mandated Plan B-2 adoption
+4. **Execution Agent** — Translated proposal to 3 price-targeted BUY orders + 1 RETAIN; flagged BAF availability check requirement
 
-**Final Status:** **APPROVED FOR EXECUTION**
+### Artifacts Generated
+- `workspace/analysis-2026-05-24.md` — 7-section portfolio analysis (holdings, market, liquidity, goal, anomalies)
+- `workspace/proposal-2026-05-24.md` — 311-line initial allocation proposal with stress tests and 5 pre-emptive weaknesses
+- `workspace/verdict-2026-05-24.md` — 13.9 KB Risk verdict (APPROVE, all Hard Rules checked, 5 adversarial concerns, Plan B-2 recommended)
+- `workspace/orders-2026-05-24.md` — 239-line execution orders with manual steps and verification checklist
+- `reports/2026-05-24-initial-allocation.md` — This comprehensive final report (all 4 artifacts consolidated)
 
----
-
-## Appendix A: Source Documents
-
-All artifacts from this session are committed to git for audit trail:
-
-1. `workspace/analysis-2026-05-24.md` — Analyst's market & portfolio state (7 sections)
-2. `workspace/proposal-2026-05-24.md` — Strategist v1 (rejected by Risk)
-3. `workspace/verdict-2026-05-24.md` — Risk Officer v1 verdict (AMEND)
-4. `workspace/proposal-2026-05-24-v2.md` — Strategist v2 (revised per amendments)
-5. `workspace/verdict-2026-05-24-v2.md` — Risk Officer v2 verdict (APPROVE)
-6. `agents/execution/workspace/orders-2026-05-24.md` — Execution Agent's order book
-7. `reports/2026-05-24-initial-allocation.md` — This consolidated report
-
-**Git commit:** (pending — will be created by Orchestrator after report finalization)
+### Git Commit
+This report will be committed as:
+```
+Initial Allocation 2026-05-24: ₹2.5L Tranche 1 (11.25% equity) — APPROVED with Plan B-2 roadmap locked (Onboarding/A/S/R/E)
+```
 
 ---
 
-## Appendix B: Hard Rules Compliance Matrix
+## 7. Key Takeaways
 
-| Hard Rule | Requirement | Pre-Deployment | Post-Tranche 1 | Status |
-|-----------|-------------|----------------|----------------|--------|
-| #1 Goal Commitment | Show net impact toward ₹1Cr by 2055 | ₹10L (10% complete) | ₹10L + ₹60K/mo SIP (on track) | ✅ PASS |
-| #2 Concentration Cap | No single position >15% | FD 100% (temporary) | FD 75% (temporary), largest equity 7.5% | ✅ PASS |
-| #3 Liquidity Buffer | ≥₹75K in cash/liquid | ₹10L FD (1,333% of min) | ₹8.5L (₹1L LIQUIDBEES + ₹7.5L FD) | ✅ PASS |
-| #4 No Debt/Leverage | Zero margin/borrowed capital | No leverage | No leverage | ✅ PASS |
-| #5 No Speculative | No crypto, F&O, forex | No speculative | No speculative | ✅ PASS |
-| #6 No Illiquid/Penny | No penny stocks, illiquid small-caps | No illiquid | NIFTYBEES/LIQUIDBEES highly liquid | ✅ PASS |
-| #7 Low-Risk Mandate | Conservative allocation for low risk tolerance | 0% equity (too conservative) | 11.25% effective equity (appropriate) | ✅ PASS |
+### ✅ Strengths
+1. **All Hard Rules Respected** — Zero violations; liquidity buffer maintained at 1,134% of minimum even post-deployment
+2. **Conservative First Step** — 11.25% equity exposure is appropriately measured for low-risk investor with 30-year horizon
+3. **Transparent Weaknesses** — Strategist proactively identified 5 concerns; Risk Officer stress-tested all assumptions
+4. **Phased Approach** — 3-tranche deployment over 90 days balances psychological safety with goal progress
+5. **Diversified Instruments** — NIFTYBEES (50 large-caps), ICICI BAF (hybrid), LIQUIDBEES (liquid) span asset classes
 
-**All 7 hard rules satisfied post-Tranche 1.**
+### ⚠️ Cautions
+1. **Market Timing Risk** — VIX 17.91 + weak breadth; potential near-term volatility (mitigated by 75% FD buffer)
+2. **Opportunity Cost** — 75% FD for 6-12 months sacrifices ₹20-40L over 30 years (addressed by Plan B-2 locked schedule)
+3. **BAF Availability** — Critical pre-check required; no ad-hoc substitution permitted
+4. **Concentration Watch** — If BAF receives ongoing SIP, monitor for 12% threshold
+5. **Binding Schedule Needed** — Plan B-2 adoption is **mandatory** to prevent indefinite deferral
 
----
-
-## Appendix C: Opportunity Cost Disclosure (from Strategist v2 Section 5)
-
-### Conservative Path (This Proposal)
-- **Year 1 allocation:** 75% FD → 50% FD (post-Tranche 2)
-- **Effective equity:** 11.25% → 22.5% → conditional 50%
-- **Projected terminal value by 2055:** ₹1.2-1.3 Cr (7% blended returns)
-- **Psychological safety:** Very high (large FD buffer, gradual exposure)
-
-### Moderate Alternative (Risk's Plan B)
-- **Year 1 allocation:** 30% FD, 25% equity, 25% hybrid, 20% liquid
-- **Effective equity:** 37.5%
-- **Projected terminal value by 2055:** ₹1.5-1.7 Cr (8.5% blended returns)
-- **Psychological safety:** Moderate (higher volatility expected)
-
-### Trade-off
-**You are paying ₹20-40 lakh in foregone gains over 30 years for the psychological peace of mind that comes with 50-75% FD retention and phased deployment.**
-
-This is NOT wrong — it's a valid trade-off **IF you understand it**.
-
-**Questions to ask yourself:**
-1. Can I tolerate seeing my portfolio drop 10-12% during a bad quarter, knowing I have 30 years to recover?
-2. Am I more afraid of losses (choose Conservative Path) or missing gains (choose Moderate Alternative)?
-3. Do I trust my ₹60K SIP commitment will continue even if equity holdings are underwater for 6-12 months?
-
-If your answer to #1 is "no" or "unsure," **this Conservative Path is the right choice**. Your peace of mind is worth ₹20-40L.
+### 📋 Next Actions (User)
+1. **Today (Before Market Close):** Verify ICICI Pru BAF availability on your platform
+2. **Today (Before 3 PM):** Execute Order 1 (LIQUIDBEES) and Order 3 (ICICI BAF)
+3. **Today (Before 3:30 PM):** Place Order 2 (NIFTYBEES LIMIT @ ₹268, 3-day validity)
+4. **May 27 (Tuesday):** Check if NIFTYBEES LIMIT filled; if not, convert to MARKET by 3:25 PM
+5. **May 28 (Wednesday):** Run `analyze_holdings.py` to verify post-execution portfolio
+6. **June 24, 2026:** Mandatory Tranche 2 checkpoint (30-day review)
+7. **August 24, 2026:** Mandatory Tranche 3 checkpoint (90-day review)
 
 ---
 
-**END OF REPORT**
+## Final Status
+
+**✅ APPROVED FOR EXECUTION**
+
+**Tranche 1:** Deploy ₹2,49,504 (25% corpus) → 11.25% effective equity  
+**Retained:** ₹7,50,496 (75% FD) → pending Tranches 2 & 3  
+**Liquidity Post-Execution:** ₹8,50,496 (1,134% of ₹75K minimum) ✅  
+**Goal Impact:** Transitions portfolio from 0% → 11.25% equity; foundational step toward ₹1Cr by 2055  
+**Risk Confidence:** 88% (12% uncertainty = market timing + pending full Monte Carlo validation)
+
+**Locked-In Future Schedule (Plan B-2):**
+- Tranche 2: June 24, 2026 (VIX <18 OR Nifty +3%)
+- Tranche 3: August 24, 2026 (60 days post-T2 OR VIX <15)
+- Target: 30% equity / 22.5% hybrid / 7.5% debt / 25% FD / 15% liquid by Q3 2026
 
 ---
 
-## Post-Report Actions (Orchestrator)
+*Report generated by Portfolio Council v0.1.0 — Orchestrator: Session management & artifact assembly | Analyst: Market observation | Strategist: Allocation design | Risk Officer: Adversarial review | Execution: Order translation*
 
-1. ✅ Copy this report to `reports/2026-05-24-initial-allocation.md`
-2. ✅ Commit all session artifacts to git with message:
-   ```
-   Initial Allocation 2026-05-24: Phased 3-tranche deployment approved (₹2.5L Tranche 1 executed, ₹7.5L FD retained) — APPROVED (Analyst/Strategist/Risk/Execution)
-   ```
-3. ✅ Notify user: "Setup complete. Tranche 1 orders ready for execution. Review `reports/2026-05-24-initial-allocation.md` for full details."
-4. ⏳ **User action required:** Place Tranche 1 orders before 3:30 PM today (or Monday if missed)
+*All artifacts available at: `workspace/analysis-2026-05-24.md`, `workspace/proposal-2026-05-24.md`, `workspace/verdict-2026-05-24.md`, `workspace/orders-2026-05-24.md`*
+
+*Git commit pending. Pre-commit hook will verify `Verdict: APPROVE` presence in verdict file.*
