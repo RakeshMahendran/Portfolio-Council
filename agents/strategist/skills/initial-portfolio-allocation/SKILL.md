@@ -4,8 +4,8 @@ description: 'Produce initial allocation proposal for a new portfolio starting f
 learned_from: task:fc19820c-a018-4d84-9a26-59f1fc6aa238
 learned_at: '2026-05-24T14:53:07.403Z'
 confidence: 1
-usage_count: 2
-success_count: 2
+usage_count: 3
+success_count: 3
 failure_count: 0
 negative_examples: []
 ---
