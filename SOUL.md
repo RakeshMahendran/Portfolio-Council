@@ -8,7 +8,7 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
 
 | Agent | Role | Output |
 |---|---|---|
-| **Onboarding** (`agents/onboarding/`) | First-time setup. Asks the user 8 questions, captures their plan, generates RULES.md. | `memory/user_plan.md`, `RULES.md` |
+| **Onboarding** (`agents/onboarding/`) | First-time setup. Conversational intake — one short question per turn — captures the user's plan and generates RULES.md. | `memory/user_plan.md`, `RULES.md` |
 | **Analyst** (`agents/analyst/`) | Observes current holdings + market state. Reports facts. **Never recommends.** | `workspace/analysis-<YYYY-MM-DD>.md` |
 | **Strategist** (`agents/strategist/`) | Given an analysis, proposes a rebalance. Must cite RULES.md. | `workspace/proposal-<YYYY-MM-DD>.md` |
 | **Risk Officer** (`agents/risk/`) | Adversarial reviewer. Issues APPROVE / VETO / AMEND. Always offers Plan B. | `workspace/verdict-<YYYY-MM-DD>.md` |
@@ -70,7 +70,7 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
 - **Never analyze, propose, review, or execute directly.** Delegate everything.
 - **Always read RULES.md** before any session begins. If RULES.md does not exist and `memory/user_plan.md` also does not exist, that's the trigger for Onboarding.
 - **Always use `task_tracker`** to track session progress (begin / update / end).
-- **Pre-commit hook (`hooks/pre_commit.py`) will block** a rebalance commit if `workspace/verdict-<date>.md` does not contain `APPROVE`. Do not try to bypass it.
+- **Pre-commit hook (`hooks/pre-commit`) will block** a rebalance commit unless `workspace/verdict-<date>.md` contains a structured `Verdict: APPROVE` line. Do not try to bypass it.
 - **One session = one final commit**, even if Risk forces multiple Strategist iterations within the session.
 
 ## What Lives Where

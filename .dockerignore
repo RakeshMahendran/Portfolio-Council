@@ -1,0 +1,39 @@
+# Things that shouldn't be copied into Docker images.
+
+.git
+.gitignore
+.gitagent
+.env
+.venv
+
+# Frontend build artifacts
+frontend/node_modules
+frontend/.next
+frontend/.vercel
+
+# Python artifacts
+__pycache__
+*.pyc
+.pytest_cache
+
+# Per-user runtime (gitignored — never goes into the image)
+RULES.md
+memory/user_plan.md
+memory/MEMORY.md
+data/
+workspace/
+reports/
+scripts/portfolio_data/
+agents/*/memory/
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+
+# Docs / docs aren't needed at runtime
+docs/
+*.md
+
+# Backup files
+*.bak

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SiteHeader from "@/components/SiteHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 // ─────────────────────────────────────────────────────────────────────────
 // PROPERLY TYPED API RESPONSES — matches server/git_ops.py output exactly
@@ -151,24 +153,21 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-mono text-sm">
-      {/* Top bar */}
-      <header className="border-b border-zinc-800 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold tracking-tight">
-            Portfolio Council
-          </span>
-          <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-            powered by gitclaw
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <span>branch: main</span>
-          <span>·</span>
-          <span>{commits.length} sessions</span>
-        </div>
-      </header>
+      <SiteHeader
+        backHref="/"
+        pageContext={
+          <>
+            <span className="text-sm text-zinc-400 font-sans">Developer view</span>
+            <span className="text-xs text-zinc-600 font-mono">·</span>
+            <StatusBadge variant="info">branch: main</StatusBadge>
+            <span className="text-xs text-zinc-500 font-mono">
+              {commits.length} commits
+            </span>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-12 gap-4 p-4 h-[calc(100vh-56px)]">
+      <div className="grid grid-cols-12 gap-4 p-4 h-[calc(100vh-80px)]">
         {/* LEFT: Session list (= git log) */}
         <aside className="col-span-3 border border-zinc-800 rounded-lg overflow-hidden flex flex-col">
           <div className="px-3 py-2 border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">

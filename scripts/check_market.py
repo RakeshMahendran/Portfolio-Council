@@ -1,6 +1,13 @@
 """Check live market sentiments for buy/no-buy decision."""
-import yfinance as yf
+import sys
 from datetime import datetime
+
+try:
+    import yfinance as yf
+except ImportError:
+    print("ERROR: yfinance is not installed. Cannot fetch live market data.")
+    print("       Install with: pip install yfinance")
+    sys.exit(2)
 
 print(f"Time: {datetime.now().strftime('%I:%M %p IST')}")
 print("=" * 70)

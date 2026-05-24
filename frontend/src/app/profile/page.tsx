@@ -2,15 +2,39 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import AuthShell from "@/components/AuthShell";
-import MarkdownView from "@/components/MarkdownView";
 import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  FileText,
+  Loader2,
+  RefreshCw,
+  Send,
+  ScrollText,
+  Shield,
+  Sparkles,
+  Target,
+  Trash2,
+  Upload,
+  Wallet,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import MarkdownView from "@/components/MarkdownView";
+import SiteHeader from "@/components/SiteHeader";
+import { Button } from "@/components/ui/Button";
+import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import {
+  HOLDINGS_EXAMPLE_URL,
   deleteHoldings,
   deleteUserPlan,
   getDataFiles,
   getHoldings,
   getRules,
   getUserPlan,
+  humanizeError,
   putUserPlan,
   stripAnsi,
   streamUpdateViaChat,
@@ -37,10 +61,9 @@ export default function ProfilePage() {
   const [updateRunning, setUpdateRunning] = useState(false);
   const [updateLog, setUpdateLog] = useState<StreamMsg[]>([]);
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const pushError = (msg: string) => setErrors((prev) => [...prev, msg]);
 
   const refreshAll = useCallback(async () => {
     try {
@@ -50,7 +73,9 @@ export default function ProfilePage() {
       if (f.rules) setRules((await getRules()).raw); else setRules(null);
       if (f.holdings) setHoldings((await getHoldings()).holdings); else setHoldings(null);
     } catch (e) {
-      pushError(`Refresh failed: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Refresh"));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -71,8 +96,9 @@ export default function ProfilePage() {
       await putUserPlan(editingPlanText);
       setEditingPlan(false);
       await refreshAll();
+      toast.success("Plan saved");
     } catch (e) {
-      pushError(`Save plan: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Save"));
     }
   };
 
@@ -86,8 +112,9 @@ export default function ProfilePage() {
     try {
       await deleteUserPlan();
       await refreshAll();
+      toast.success("Plan deleted. Re-onboard from the home page.");
     } catch (e) {
-      pushError(`Delete plan: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Delete"));
     }
   };
 
@@ -97,8 +124,9 @@ export default function ProfilePage() {
     try {
       await deleteHoldings();
       await refreshAll();
+      toast.success("Holdings deleted");
     } catch (e) {
-      pushError(`Delete holdings: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Delete"));
     }
   };
 
@@ -108,11 +136,25 @@ export default function ProfilePage() {
     const f = event.target.files?.[0];
     event.target.value = ""; // allow re-selecting the same file
     if (!f) return;
+    setUploading(true);
+    const tid = toast.loading(`Parsing ${f.name}…`, {
+      description: "Trying fast path, falling back to AI if needed.",
+    });
     try {
-      await uploadHoldings(f);
+      const result = await uploadHoldings(f);
       await refreshAll();
+      const via =
+        result.mapped_via && result.mapped_via.includes("LLM")
+          ? "AI column inference"
+          : "deterministic parser";
+      toast.success(`Imported ${result.count} positions`, {
+        id: tid,
+        description: `Mapped via ${via}.`,
+      });
     } catch (e) {
-      pushError(`Upload: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Upload"), { id: tid });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -121,14 +163,16 @@ export default function ProfilePage() {
     if (!text || updateRunning) return;
     setUpdateRunning(true);
     setUpdateLog([]);
+    const tid = toast.loading("Agent is updating your file…");
     try {
       for await (const msg of streamUpdateViaChat(updateTarget, text)) {
         setUpdateLog((prev) => [...prev, msg]);
       }
       await refreshAll();
       setUpdateInstruction("");
+      toast.success("File updated", { id: tid });
     } catch (e) {
-      pushError(`Update via chat: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(humanizeError(e, "Update"), { id: tid });
     } finally {
       setUpdateRunning(false);
     }
@@ -136,55 +180,47 @@ export default function ProfilePage() {
 
   // ─── Render ────────────────────────────────────────────────────
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+        <SiteHeader backHref="/" />
+        <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-32" />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-zinc-400 hover:text-zinc-100 transition text-sm">
-            ←
-          </Link>
-          <span className="text-lg font-semibold tracking-tight">Portfolio Council</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-            powered by gitclaw
-          </span>
-        </div>
-        <AuthShell />
-      </header>
+      <SiteHeader backHref="/" />
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Your Profile</h1>
-          <p className="text-zinc-500 text-sm mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+              Profile
+            </span>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">Your data</h1>
+          <p className="text-zinc-500 text-sm mt-1.5 max-w-prose">
             Goals, holdings, and governance — your local repo&apos;s source of
-            truth. Files live in{" "}
-            <code className="text-zinc-400">memory/</code>,{" "}
-            <code className="text-zinc-400">data/</code>, and{" "}
-            <code className="text-zinc-400">RULES.md</code>.
+            truth. Stored at{" "}
+            <code className="text-zinc-400 text-xs">memory/user_plan.md</code>,{" "}
+            <code className="text-zinc-400 text-xs">data/holdings.json</code>,
+            and <code className="text-zinc-400 text-xs">RULES.md</code> in your
+            cloned repo.
           </p>
         </div>
-
-        {errors.length > 0 && (
-          <div className="border border-red-900/60 bg-red-950/40 rounded-lg p-3 text-sm">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-red-400 font-medium">Errors</span>
-              <button
-                onClick={() => setErrors([])}
-                className="text-red-500 hover:text-red-300 text-xs"
-              >
-                clear
-              </button>
-            </div>
-            <ul className="text-red-300 text-xs space-y-1">
-              {errors.map((e, i) => (
-                <li key={i}>• {e}</li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* PLAN SECTION */}
         <Section
           title="Plan"
+          icon={Target}
           status={files?.user_plan ? "ok" : "missing"}
           missingMessage="No plan yet — run onboarding first."
           missingAction={
@@ -198,19 +234,23 @@ export default function ProfilePage() {
           actions={
             plan && (
               <>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={onEditPlanClick}
                   disabled={editingPlan}
-                  className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 disabled:opacity-50"
                 >
+                  <FileText className="w-3 h-3" />
                   Edit raw
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={onDeletePlan}
-                  className="px-2.5 py-1 text-xs bg-red-900/40 hover:bg-red-900/60 rounded border border-red-800 text-red-300"
                 >
-                  Delete + Re-onboard
-                </button>
+                  <Trash2 className="w-3 h-3" />
+                  Re-onboard
+                </Button>
               </>
             )
           }
@@ -221,12 +261,19 @@ export default function ProfilePage() {
 
               <button
                 onClick={() => setPlanRawVisible((v) => !v)}
-                className="text-xs text-zinc-500 hover:text-zinc-300"
+                className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-colors"
               >
-                {planRawVisible ? "▾" : "▸"} Raw markdown ({plan.raw.length} chars)
+                {planRawVisible ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5" />
+                )}
+                <FileText className="w-3.5 h-3.5" />
+                {planRawVisible ? "Hide" : "View"} raw markdown
+                <span className="text-zinc-600">· {plan.raw.length} chars</span>
               </button>
               {planRawVisible && (
-                <div className="border border-zinc-800 rounded p-3 bg-zinc-900">
+                <div className="border border-zinc-800 rounded-lg p-5 bg-zinc-950/50">
                   <MarkdownView content={plan.raw} />
                 </div>
               )}
@@ -261,31 +308,68 @@ export default function ProfilePage() {
         {/* HOLDINGS SECTION */}
         <Section
           title="Holdings"
+          icon={Wallet}
           status={files?.holdings ? "ok" : "missing"}
+          subtitle={
+            <>
+              Accepts <code className="text-zinc-400">.csv</code>,{" "}
+              <code className="text-zinc-400">.xlsx</code>, or{" "}
+              <code className="text-zinc-400">.json</code>. Required columns:{" "}
+              <code className="text-zinc-400">symbol</code>,{" "}
+              <code className="text-zinc-400">qty</code>,{" "}
+              <code className="text-zinc-400">avg_price</code>{" "}
+              (flexible naming — &quot;ticker&quot;, &quot;quantity&quot;,
+              &quot;avg price&quot; also work).{" "}
+              <a
+                href={HOLDINGS_EXAMPLE_URL}
+                download
+                className="text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Download example CSV ↓
+              </a>
+            </>
+          }
           missingMessage="No holdings uploaded. The agents need this to run a review."
           missingAction={
-            <button
-              onClick={onUploadClick}
-              className="text-emerald-400 hover:text-emerald-300 text-sm"
-            >
-              → Upload CSV / Excel / JSON
-            </button>
+            <div className="flex flex-wrap gap-3 items-center">
+              <Button
+                variant="primary"
+                onClick={onUploadClick}
+                loading={uploading}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload file
+              </Button>
+              <a
+                href={HOLDINGS_EXAMPLE_URL}
+                download
+                className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download template
+              </a>
+            </div>
           }
           actions={
             holdings && (
               <>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={onUploadClick}
-                  className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700"
+                  loading={uploading}
                 >
+                  <RefreshCw className="w-3 h-3" />
                   Replace
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={onDeleteHoldings}
-                  className="px-2.5 py-1 text-xs bg-red-900/40 hover:bg-red-900/60 rounded border border-red-800 text-red-300"
                 >
+                  <Trash2 className="w-3 h-3" />
                   Delete
-                </button>
+                </Button>
               </>
             )
           }
@@ -303,56 +387,70 @@ export default function ProfilePage() {
         {/* RULES SECTION */}
         <Section
           title="Rules"
+          icon={Shield}
           status={files?.rules ? "ok" : "missing"}
           missingMessage="No rules — these are auto-generated from your plan. Run onboarding."
           subtitle="Generated from your plan by the Onboarding agent. Modify the plan above to regenerate rules. Risk Officer enforces these on every session."
         >
           {rules && (
-            <>
+            <div>
               <button
                 onClick={() => setRulesRawVisible((v) => !v)}
-                className="text-xs text-zinc-500 hover:text-zinc-300 mb-2"
+                className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-colors mb-3"
               >
-                {rulesRawVisible ? "▾" : "▸"} View rules ({rules.length} chars)
+                {rulesRawVisible ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5" />
+                )}
+                <ScrollText className="w-3.5 h-3.5" />
+                {rulesRawVisible ? "Hide" : "View"} full ruleset
+                <span className="text-zinc-600">· {rules.length} chars</span>
               </button>
               {rulesRawVisible && (
-                <div className="border border-zinc-800 rounded p-3 bg-zinc-900">
+                <div className="border border-zinc-800 rounded-lg p-5 bg-zinc-950/50">
                   <MarkdownView content={rules} />
                 </div>
               )}
-            </>
+            </div>
           )}
         </Section>
 
         {/* ASK AGENT TO UPDATE */}
-        <section className="border border-emerald-900/40 bg-emerald-950/10 rounded-lg p-5">
-          <h2 className="text-base font-semibold mb-2">
-            Ask the agent to update
-          </h2>
-          <p className="text-xs text-zinc-500 mb-3">
-            Natural-language modifications. Examples:{" "}
-            <span className="text-zinc-400">
-              &quot;Change my target to ₹50L by 2028&quot;
-            </span>
-            ,{" "}
-            <span className="text-zinc-400">
-              &quot;Add bought 10 RELIANCE at ₹2,500&quot;
-            </span>
-            .
-          </p>
+        <section className="border border-emerald-900/40 bg-gradient-to-br from-emerald-950/20 to-zinc-950 rounded-lg p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-9 h-9 rounded-lg bg-emerald-900/40 border border-emerald-800/60 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-emerald-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base font-semibold">
+                Ask the agent to update
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1">
+                Natural language → agent modifies the right file. Try:{" "}
+                <span className="text-zinc-400">
+                  &quot;Change my target to ₹50L by 2028&quot;
+                </span>
+                {" or "}
+                <span className="text-zinc-400">
+                  &quot;Bought 10 RELIANCE at ₹2,500&quot;
+                </span>
+              </p>
+            </div>
+          </div>
 
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2">
             <select
               value={updateTarget}
               onChange={(e) =>
                 setUpdateTarget(e.target.value as typeof updateTarget)
               }
               disabled={updateRunning}
-              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-xs"
+              className="bg-zinc-900 border border-zinc-800 rounded-md px-2.5 py-2 text-xs text-zinc-300 focus:outline-none focus:border-zinc-600 disabled:opacity-50"
             >
-              <option value="user_plan">user_plan.md</option>
-              <option value="holdings">holdings.json</option>
-              <option value="rules">RULES.md</option>
+              <option value="user_plan">user_plan</option>
+              <option value="holdings">holdings</option>
+              <option value="rules">RULES</option>
             </select>
             <input
               type="text"
@@ -363,15 +461,17 @@ export default function ProfilePage() {
               }}
               placeholder="Type your change request…"
               disabled={updateRunning}
-              className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-zinc-600"
+              className="flex-1 bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-zinc-600 disabled:opacity-50"
             />
-            <button
+            <Button
+              variant="primary"
               onClick={onSendUpdate}
-              disabled={updateRunning || !updateInstruction.trim()}
-              className="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-500 rounded font-semibold"
+              disabled={!updateInstruction.trim()}
+              loading={updateRunning}
             >
-              {updateRunning ? "Running…" : "Send to gitclaw"}
-            </button>
+              {!updateRunning && <Send className="w-3.5 h-3.5" />}
+              {updateRunning ? "Working" : "Send"}
+            </Button>
           </div>
 
           {updateLog.length > 0 && (
@@ -391,6 +491,7 @@ export default function ProfilePage() {
 
 function Section({
   title,
+  icon: Icon,
   status,
   subtitle,
   missingMessage,
@@ -399,129 +500,256 @@ function Section({
   children,
 }: {
   title: string;
+  icon?: React.ComponentType<{ className?: string }>;
   status: "ok" | "missing";
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   missingMessage?: string;
   missingAction?: React.ReactNode;
   actions?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
-    <section className="border border-zinc-800 rounded-lg p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold">{title}</h2>
-            {status === "missing" && (
-              <span className="text-xs px-1.5 rounded bg-red-900/40 text-red-300">
-                missing
-              </span>
+    <section className="border border-zinc-800 rounded-lg bg-zinc-900/20 overflow-hidden">
+      <div className="px-5 py-4 border-b border-zinc-800/60 flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 flex items-start gap-3">
+          {Icon && (
+            <div className="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Icon className="w-4 h-4 text-zinc-400" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold">{title}</h2>
+              {status === "missing" && (
+                <StatusBadge variant="warning">missing</StatusBadge>
+              )}
+              {status === "ok" && (
+                <StatusBadge variant="success">ready</StatusBadge>
+              )}
+            </div>
+            {subtitle && (
+              <p className="text-xs text-zinc-500 mt-1.5 max-w-prose leading-relaxed">
+                {subtitle}
+              </p>
             )}
           </div>
-          {subtitle && (
-            <p className="text-xs text-zinc-500 mt-1 max-w-prose">{subtitle}</p>
-          )}
         </div>
-        {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
+        {actions && (
+          <div className="flex gap-2 shrink-0 self-start pt-0.5">{actions}</div>
+        )}
       </div>
 
-      {status === "missing" ? (
-        <div className="text-sm text-zinc-500">
-          {missingMessage}
-          <div className="mt-2">{missingAction}</div>
-        </div>
-      ) : (
-        children
-      )}
+      <div className="p-5">
+        {status === "missing" ? (
+          <div className="text-sm text-zinc-500">
+            {missingMessage}
+            <div className="mt-3">{missingAction}</div>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
     </section>
   );
 }
 
 function ParsedPlanGrid({ parsed }: { parsed: ParsedUserPlan }) {
-  const fields: Array<{ label: string; value?: string }> = [
-    { label: "Goal", value: parsed.goalType },
-    { label: "Target", value: parsed.targetAmount ? `₹${parsed.targetAmount}` : undefined },
-    { label: "By", value: parsed.targetDate },
-    { label: "Horizon", value: parsed.timeHorizon },
-    { label: "Portfolio Value", value: parsed.portfolioValue ? `₹${parsed.portfolioValue}` : undefined },
-    { label: "Monthly Income", value: parsed.monthlyIncome ? `₹${parsed.monthlyIncome}` : undefined },
-    { label: "Net Investable", value: parsed.netInvestable ? `₹${parsed.netInvestable}` : undefined },
-    { label: "Risk Tolerance", value: parsed.riskTolerance },
-  ];
+  // Format INR values into Indian numbering (lakhs/crores)
+  const fmtInr = (s?: string) => {
+    if (!s) return undefined;
+    const n = Number(s.replace(/[,₹\s]/g, ""));
+    if (isNaN(n)) return s;
+    if (n >= 10000000) return `₹${(n / 10000000).toFixed(2)} Cr`;
+    if (n >= 100000) return `₹${(n / 100000).toFixed(2)} L`;
+    return `₹${n.toLocaleString("en-IN")}`;
+  };
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {fields.map((f) => (
-          <div key={f.label} className="border border-zinc-800 rounded p-2.5 bg-zinc-900/40">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">
-              {f.label}
+    <div className="space-y-5">
+      {/* HERO: Goal */}
+      <div className="border border-emerald-900/40 bg-gradient-to-br from-emerald-950/20 to-zinc-950 rounded-lg p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-emerald-400/80 mb-1.5">
+              Primary goal
             </div>
-            <div className="text-sm text-zinc-100 mt-0.5">
-              {f.value ?? <span className="text-zinc-600">—</span>}
+            <div className="text-2xl font-semibold tracking-tight">
+              {parsed.goalType ?? "—"}
             </div>
           </div>
-        ))}
-      </div>
-
-      {parsed.hardConstraints && parsed.hardConstraints.length > 0 && (
-        <div>
-          <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
-            Hard Constraints
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {parsed.hardConstraints.map((c, i) => (
-              <span
-                key={i}
-                className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300"
-              >
-                {c}
-              </span>
-            ))}
+          <div className="text-right">
+            <div className="text-3xl font-bold text-emerald-300 tabular-nums">
+              {fmtInr(parsed.targetAmount) ?? "—"}
+            </div>
+            <div className="text-xs text-zinc-400 mt-0.5">
+              by {parsed.targetDate ?? "—"}
+              {parsed.timeHorizon && (
+                <span className="text-zinc-500"> · {parsed.timeHorizon}</span>
+              )}
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* STATS GRID */}
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
+          Financial position
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <StatTile label="Current portfolio" value={fmtInr(parsed.portfolioValue)} />
+          <StatTile label="Monthly income" value={fmtInr(parsed.monthlyIncome)} />
+          <StatTile
+            label="Net investable / mo"
+            value={fmtInr(parsed.netInvestable)}
+            emphasis
+          />
+        </div>
+      </div>
+
+      {/* RISK */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="border border-zinc-800 rounded-lg p-4 bg-zinc-900/40">
+          <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
+            Risk tolerance
+          </div>
+          <div className="text-base font-medium">
+            <RiskBadge level={parsed.riskTolerance} />
+          </div>
+        </div>
+        <div className="md:col-span-2 border border-zinc-800 rounded-lg p-4 bg-zinc-900/40">
+          <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
+            Hard constraints
+          </div>
+          {parsed.hardConstraints && parsed.hardConstraints.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {parsed.hardConstraints.map((c, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-950/40 border border-red-900/50 text-red-300/90"
+                >
+                  <X className="w-3 h-3" />
+                  {c.replace(/^no /i, "")}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs text-zinc-600 italic">None specified</span>
+          )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  emphasis,
+}: {
+  label: string;
+  value?: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <div
+      className={`border rounded-lg p-4 ${
+        emphasis
+          ? "border-emerald-800/60 bg-emerald-950/20"
+          : "border-zinc-800 bg-zinc-900/40"
+      }`}
+    >
+      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
+        {label}
+      </div>
+      <div
+        className={`text-xl font-semibold tabular-nums ${
+          emphasis ? "text-emerald-300" : "text-zinc-100"
+        }`}
+      >
+        {value ?? <span className="text-zinc-600">—</span>}
+      </div>
+    </div>
+  );
+}
+
+function RiskBadge({ level }: { level?: string }) {
+  const norm = level?.toLowerCase();
+  const config =
+    norm === "high"
+      ? { color: "text-red-300 bg-red-950/40 border-red-900/50", label: "High" }
+      : norm === "medium" || norm === "moderate"
+        ? { color: "text-amber-300 bg-amber-950/40 border-amber-900/50", label: "Medium" }
+        : norm === "low"
+          ? { color: "text-emerald-300 bg-emerald-950/40 border-emerald-900/50", label: "Low" }
+          : { color: "text-zinc-400 bg-zinc-800 border-zinc-700", label: level ?? "—" };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-sm ${config.color}`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {config.label}
+    </span>
   );
 }
 
 function HoldingsTable({ holdings }: { holdings: Holding[] }) {
   const totalCost = holdings.reduce((sum, h) => sum + h.qty * h.avg_price, 0);
 
+  // Indian INR formatting — always 2 decimal places, Indian comma grouping
+  const fmtInr = (n: number) =>
+    n.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   return (
-    <div>
+    <div className="border border-zinc-800 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-800 text-left text-xs uppercase tracking-wider text-zinc-500">
-              <th className="py-2 pr-3 font-medium">Symbol</th>
-              <th className="py-2 px-3 font-medium text-right">Qty</th>
-              <th className="py-2 px-3 font-medium text-right">Avg Price</th>
-              <th className="py-2 pl-3 font-medium text-right">Cost Basis</th>
+            <tr className="bg-zinc-900/60 text-left text-[10px] uppercase tracking-wider text-zinc-500 border-b border-zinc-800">
+              <th className="py-3 px-4 font-medium">Symbol</th>
+              <th className="py-3 px-4 font-medium text-right tabular-nums">Qty</th>
+              <th className="py-3 px-4 font-medium text-right tabular-nums">
+                Avg Price
+              </th>
+              <th className="py-3 px-4 font-medium text-right tabular-nums">
+                Cost Basis
+              </th>
             </tr>
           </thead>
           <tbody>
             {holdings.map((h, i) => (
-              <tr key={`${h.symbol}-${i}`} className="border-b border-zinc-900">
-                <td className="py-2 pr-3 font-medium">{h.symbol}</td>
-                <td className="py-2 px-3 text-right text-zinc-300">{h.qty}</td>
-                <td className="py-2 px-3 text-right text-zinc-300">
-                  ₹{h.avg_price.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              <tr
+                key={`${h.symbol}-${i}`}
+                className="border-b border-zinc-900/60 hover:bg-zinc-900/40 transition-colors last:border-b-0"
+              >
+                <td className="py-3 px-4 font-medium text-zinc-100">
+                  {h.symbol}
                 </td>
-                <td className="py-2 pl-3 text-right text-zinc-300">
-                  ₹{(h.qty * h.avg_price).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                <td className="py-3 px-4 text-right text-zinc-300 tabular-nums">
+                  {h.qty.toLocaleString("en-IN")}
+                </td>
+                <td className="py-3 px-4 text-right text-zinc-300 tabular-nums">
+                  ₹{fmtInr(h.avg_price)}
+                </td>
+                <td className="py-3 px-4 text-right text-zinc-100 tabular-nums font-medium">
+                  ₹{fmtInr(h.qty * h.avg_price)}
                 </td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr className="text-xs">
-              <td className="pt-2 text-zinc-500">{holdings.length} positions</td>
-              <td colSpan={2} className="pt-2 text-right text-zinc-500">
+            <tr className="bg-zinc-900/60 border-t border-zinc-800">
+              <td className="py-3 px-4 text-xs text-zinc-500">
+                {holdings.length} {holdings.length === 1 ? "position" : "positions"}
+              </td>
+              <td colSpan={2} className="py-3 px-4 text-right text-xs text-zinc-500">
                 Total cost basis
               </td>
-              <td className="pt-2 pl-3 text-right text-zinc-100 font-semibold">
-                ₹{totalCost.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              <td className="py-3 px-4 text-right text-zinc-100 font-semibold tabular-nums">
+                ₹{fmtInr(totalCost)}
               </td>
             </tr>
           </tfoot>

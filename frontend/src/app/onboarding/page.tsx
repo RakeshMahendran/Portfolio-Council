@@ -2,11 +2,19 @@
 
 import clsx from "clsx";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import ActivityFAB, { type Activity } from "@/components/ActivityFAB";
+import AttachmentCard, {
+  detectAttachmentMode,
+} from "@/components/AttachmentCard";
 import ChatInput from "@/components/ChatInput";
 import ChatMessage, { type ChatRole } from "@/components/ChatMessage";
-import { getLog, streamRun } from "@/lib/api";
+import { QuickReplies } from "@/components/QuickReplies";
+import SiteHeader from "@/components/SiteHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { getLog, streamRun, stripAnsi, stripNoise } from "@/lib/api";
 
 type Message = {
   id: string;
@@ -18,10 +26,12 @@ type Message = {
 
 const SYSTEM_INTRO =
   "Hi! I'm the Onboarding agent. Let's get you set up for Portfolio Council. " +
-  "I'll ask ~8 questions about your goals, finances, and constraints. " +
+  "I'll ask a few short questions about your goals, finances, and constraints — one at a time. " +
   "I'll cross-check answers and push back if something doesn't add up. " +
   "Ready? Just say hi to begin.";
 
+// Used only for the header progress bar UI. The agent itself does not count
+// questions — it asks until the checklist in SOUL.md is filled.
 const TOTAL_QUESTIONS = 8;
 
 function newId() {
@@ -58,16 +68,33 @@ function buildPrompt(history: Message[], latest: string): string {
 }
 
 export default function OnboardingPage() {
+  const router = useRouter();
+  // NB: leave intro timestamp empty during initial render — `ts()` would
+  // evaluate to a UTC time on the server and a local time on the client,
+  // breaking hydration. The post-mount effect below fills it in.
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "intro",
       role: "system",
       text: SYSTEM_INTRO,
-      timestamp: ts(),
+      timestamp: "",
     },
   ]);
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
+  // gitclaw tool calls fired in the current/last turn (▶ memory load, etc.).
+  // Surfaced through ActivityFAB so the user knows things are happening when
+  // a turn is slow.
+  const [activities, setActivities] = useState<Activity[]>([]);
+
+  // Stamp the intro message after the client has mounted.
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === "intro" && !m.timestamp ? { ...m, timestamp: ts() } : m,
+      ),
+    );
+  }, []);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   // Tracks the timestamp of the most recent onboarding commit seen on mount.
@@ -143,12 +170,22 @@ export default function OnboardingPage() {
         {
           id: "complete-banner",
           role: "system",
-          text: "Onboarding complete! Click below to go to your dashboard.",
+          text: "Onboarding complete — forwarding you to the setup screen…",
           timestamp: ts(),
         },
       ];
     });
   }, [completed]);
+
+  // ── Forward to /processing once we detect an onboarding commit ──────────
+  // Short delay lets the user see the "complete" system banner before the
+  // page changes. /processing then polls until plan + RULES are visible and
+  // forwards to /profile from there.
+  useEffect(() => {
+    if (!completed) return;
+    const t = setTimeout(() => router.push("/processing"), 1500);
+    return () => clearTimeout(t);
+  }, [completed, router]);
 
   // ── Count of agent turns → progress indicator ───────────────────────────
   const agentTurnCount = useMemo(
@@ -180,25 +217,29 @@ export default function OnboardingPage() {
       const history = messages;
 
       setMessages((prev) => [...prev, userMsg, agentPlaceholder]);
+      // Fresh activity list per turn — the FAB shows "what gitclaw did on
+      // this question", not the whole session history.
+      setActivities([]);
       setRunning(true);
 
       const prompt = buildPrompt(history, text);
 
       try {
         let acc = "";
-        for await (const evt of streamRun(prompt)) {
-          // Append any "speech-like" event text into the agent bubble.
-          if (
-            evt.type === "output" ||
-            evt.type === "task_end" ||
-            evt.type === "system"
-          ) {
+        // Route at the onboarding sub-agent directly; otherwise the parent
+        // orchestrator role-plays Onboarding from its own SOUL.md table and
+        // overrides agents/onboarding/SOUL.md rules.
+        for await (const evt of streamRun(prompt, "onboarding")) {
+          // streamRun has already dropped banner/warning lines; here we just
+          // append the agent's speech to the bubble. A final stripNoise pass
+          // on the accumulated text means stale state self-heals if anything
+          // ever slipped through.
+          if (evt.type === "output") {
             const chunk = evt.text ?? "";
             if (!chunk) continue;
-            // Insert a newline between gitclaw output lines that don't already end with one.
-            // (Previous version had a no-op ternary that always returned "".)
             acc += (acc && !acc.endsWith("\n") ? "\n" : "") + chunk;
-            const next = acc;
+            const next = stripNoise(acc);
+            if (!next) continue;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === agentId ? { ...m, text: next, streaming: true } : m,
@@ -214,6 +255,14 @@ export default function OnboardingPage() {
                 m.id === agentId ? { ...m, text: next, streaming: true } : m,
               ),
             );
+          } else if (evt.type === "tool_use") {
+            // Surface tool calls in the ActivityFAB (not in the chat bubble).
+            const raw = stripAnsi(evt.text ?? "").trim();
+            if (!raw) continue;
+            setActivities((prev) => [
+              ...prev,
+              { id: newId(), text: raw, timestamp: ts() },
+            ]);
           } else if (evt.type === "session_end") {
             // Finalize bubble.
             setMessages((prev) =>
@@ -229,7 +278,7 @@ export default function OnboardingPage() {
             );
             break;
           }
-          // session_start / tool_use → ignored in chat UI
+          // session_start → ignored in chat UI
         }
       } catch (err) {
         setMessages((prev) =>
@@ -261,43 +310,37 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="border-b border-zinc-800 px-6 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-sm text-zinc-400 hover:text-zinc-100 transition"
-          >
-            ← Home
-          </Link>
-          <div className="h-4 w-px bg-zinc-800" />
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold tracking-tight">
-              Portfolio Council Setup
-            </span>
-            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-              onboarding
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
-          <span>
-            Question{" "}
-            <span className="text-zinc-300 font-medium">{questionNumber}</span>{" "}
-            of ~{TOTAL_QUESTIONS}
-          </span>
-          <div className="w-24 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all"
-              style={{
-                width: `${Math.min(
-                  100,
-                  Math.round((agentTurnCount / TOTAL_QUESTIONS) * 100),
-                )}%`,
-              }}
-            />
-          </div>
-        </div>
-      </header>
+      <div className="shrink-0">
+        <SiteHeader
+          backHref="/"
+          pageContext={
+            <>
+              <span className="text-sm text-zinc-400">Setup</span>
+              <StatusBadge variant="info">onboarding</StatusBadge>
+              <div className="flex items-center gap-2 text-xs text-zinc-500 ml-1">
+                <span>
+                  Q{" "}
+                  <span className="text-zinc-300 font-medium">
+                    {questionNumber}
+                  </span>
+                  /~{TOTAL_QUESTIONS}
+                </span>
+                <div className="w-20 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round((agentTurnCount / TOTAL_QUESTIONS) * 100),
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          }
+        />
+      </div>
 
       {/* ── Messages ───────────────────────────────────────────────────── */}
       <div
@@ -305,27 +348,60 @@ export default function OnboardingPage() {
         className="flex-1 overflow-y-auto"
       >
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
-          {messages.map((m) => (
-            <ChatMessage
-              key={m.id}
-              role={m.role}
-              text={m.text}
-              streaming={m.streaming}
-              timestamp={m.timestamp}
-            />
-          ))}
+          {messages.map((m, idx) => {
+            const isLast = idx === messages.length - 1;
+            const isLatestAgent =
+              isLast && m.role === "agent" && !m.streaming && !running;
+            // Only one of QuickReplies / AttachmentCard renders per message.
+            // AttachmentCard takes precedence: if the agent is asking about
+            // expenses or holdings, the upload affordance is more useful
+            // than a plain quick-reply list.
+            const attachmentMode = isLatestAgent
+              ? detectAttachmentMode(m.text)
+              : null;
+            return (
+              <div key={m.id}>
+                <ChatMessage
+                  role={m.role}
+                  text={m.text}
+                  streaming={m.streaming}
+                  timestamp={m.timestamp}
+                />
+                {isLatestAgent && attachmentMode && (
+                  <div className="ml-12 mb-3">
+                    <AttachmentCard
+                      mode={attachmentMode}
+                      disabled={running || completed}
+                      onSendMessage={handleSend}
+                    />
+                  </div>
+                )}
+                {isLatestAgent && !attachmentMode && (
+                  <div className="ml-12 -mt-1 mb-3">
+                    <QuickReplies
+                      text={m.text}
+                      disabled={running || completed}
+                      onSelect={handleSend}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {completed && (
-            <div className="w-full flex justify-center my-6">
+            <div className="w-full flex flex-col items-center gap-2 my-6">
+              <p className="text-sm text-zinc-400">
+                Forwarding to your setup screen…
+              </p>
               <Link
-                href="/"
+                href="/processing"
                 className={clsx(
-                  "inline-flex items-center gap-2 rounded-lg px-5 py-2.5",
-                  "bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium",
-                  "shadow-lg shadow-emerald-900/30 transition",
+                  "inline-flex items-center gap-2 rounded-lg px-4 py-2",
+                  "border border-zinc-700 bg-zinc-900/50 text-zinc-300 text-xs hover:border-zinc-500",
                 )}
               >
-                Go to Dashboard →
+                Continue now →
               </Link>
             </div>
           )}
@@ -342,12 +418,17 @@ export default function OnboardingPage() {
               completed
                 ? "Onboarding complete — head to your dashboard."
                 : running
-                  ? "Onboarding agent is responding…"
+                  ? activities.length > 0
+                    ? `Agent is working — ${activities.length} ${activities.length === 1 ? "action" : "actions"} so far…`
+                    : "Agent is thinking — this can take 10–30s for the first message…"
                   : "Say hi to begin, or answer the agent's question…"
             }
           />
         </div>
       </div>
+
+      {/* Floating activity panel — only renders while running or activity exists */}
+      <ActivityFAB activities={activities} running={running} />
     </div>
   );
 }

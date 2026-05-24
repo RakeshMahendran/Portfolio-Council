@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import AuthShell from "@/components/AuthShell";
 import MarkdownView from "@/components/MarkdownView";
+import SiteHeader from "@/components/SiteHeader";
 import { getLatestSession, getWorkspaceFile } from "@/lib/api";
 
 const AGENT_META = {
@@ -111,20 +111,14 @@ function AgentDetailInner() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/session"
-            className="text-zinc-400 hover:text-zinc-100 transition text-sm"
-          >
-            ← Back to session
-          </Link>
-          <span className="text-lg font-semibold tracking-tight">
+      <SiteHeader
+        backHref="/session"
+        pageContext={
+          <span className="text-sm text-zinc-400">
             {meta.icon} {meta.name}
           </span>
-        </div>
-        <AuthShell />
-      </header>
+        }
+      />
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-4">
         <div className="border border-zinc-800 rounded-lg p-4 bg-zinc-900/40">

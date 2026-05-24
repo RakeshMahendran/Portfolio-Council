@@ -88,7 +88,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           placeholder={placeholder ?? "Type your message…"}
           className={clsx(
             "flex-1 resize-none bg-transparent outline-none",
-            "text-sm leading-6 text-zinc-100 placeholder:text-zinc-500",
+            "text-[15px] leading-6 text-zinc-100 placeholder:text-zinc-500",
             "max-h-40",
           )}
         />
@@ -97,7 +97,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           onClick={() => void submit()}
           disabled={!canSend}
           className={clsx(
-            "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition",
+            "shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition",
             canSend
               ? "bg-blue-600 text-white hover:bg-blue-500"
               : "bg-zinc-800 text-zinc-500 cursor-not-allowed",
@@ -107,7 +107,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           {sending ? "…" : "Send"}
         </button>
       </div>
-      <div className="text-[10px] text-zinc-600 mt-1.5 px-1">
+      <div className="text-[11px] text-zinc-600 mt-1.5 px-1">
         Press Enter to send · Shift+Enter for newline
       </div>
     </div>

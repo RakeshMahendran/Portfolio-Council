@@ -5,6 +5,40 @@ import type { Commit, StreamMsg, SetupStatus } from "./types";
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
+/**
+ * Turn a raw HTTP error / fetch failure into a sentence a human can read.
+ * Maps known status codes to actionable messages.
+ */
+export function humanizeError(input: unknown, context: string = "Request"): string {
+  // Network / CORS / backend down
+  if (input instanceof TypeError && input.message.includes("fetch")) {
+    return `Can't reach the backend. Is it running on ${API_BASE}? Try \`docker compose up\` or start uvicorn on port 8000.`;
+  }
+  const msg = input instanceof Error ? input.message : String(input);
+  // Try to extract HTTP status code from the message
+  const statusMatch = msg.match(/\b(\d{3})\b/);
+  const status = statusMatch ? Number(statusMatch[1]) : undefined;
+  switch (status) {
+    case 400:
+      return `${context} rejected — the data sent looks malformed. (${msg})`;
+    case 401:
+    case 403:
+      return `${context} blocked — auth/credentials missing or rejected.`;
+    case 404:
+      return `${context} not found — the file or endpoint doesn't exist yet.`;
+    case 413:
+      return `${context} too large — we accept files up to 10 MB.`;
+    case 500:
+      return `Server error — check the backend terminal for a Python traceback.`;
+    case 502:
+    case 503:
+    case 504:
+      return `Upstream service unreachable — usually means Bedrock/Azure isn't responding. Check your AWS_BEARER_TOKEN_BEDROCK.`;
+    default:
+      return msg;
+  }
+}
+
 export async function getLog(maxCount = 100): Promise<Commit[]> {
   const res = await fetch(`${API_BASE}/api/log?max_count=${maxCount}`);
   if (!res.ok) throw new Error(`getLog failed: ${res.status}`);
@@ -53,17 +87,108 @@ export async function getSetupStatus(): Promise<SetupStatus> {
   }
 }
 
+// gitclaw wraps its process metadata in ANSI styling: bold (\x1b[1m) for the
+// agent name line, dim (\x1b[2m) for everything else (model/tools/skills
+// banner, tool execution markers, tool-result previews, memory dumps). The
+// agent's actual spoken response is written plain (no ANSI). So the right
+// noise filter isn't "match these strings" — it's "drop everything that's
+// inside a bold or dim range".
+export type AnsiState = { inDim: boolean; inBold: boolean };
+
+const ANSI_CSI = /^\x1b\[([0-9;]*)([a-zA-Z])/;
+
+/**
+ * Walk `text` character by character, threading the bold/dim state given
+ * in `state` (mutated in place so the caller can carry state across stream
+ * events). Returns only the characters that were emitted while in plain
+ * (non-bold, non-dim) mode.
+ */
+export function extractPlainText(text: string, state: AnsiState): string {
+  const out: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "\x1b" && text[i + 1] === "[") {
+      const m = text.slice(i).match(ANSI_CSI);
+      if (!m) { i++; continue; }
+      // Only SGR (set-graphics-rendition) escapes — `\x1b[<codes>m` — affect
+      // bold/dim. Cursor motion etc. (`H`, `J`, `K`) are ignored.
+      if (m[2] === "m") {
+        const codes = m[1] === "" ? ["0"] : m[1].split(";");
+        for (const c of codes) {
+          if (c === "0" || c === "") {
+            state.inDim = false;
+            state.inBold = false;
+          } else if (c === "1") {
+            state.inBold = true;
+          } else if (c === "2") {
+            state.inDim = true;
+          } else if (c === "22") {
+            state.inDim = false;
+            state.inBold = false;
+          }
+        }
+      }
+      i += m[0].length;
+    } else {
+      if (!state.inDim && !state.inBold) out.push(text[i]);
+      i++;
+    }
+  }
+  return out.join("");
+}
+
+// Belt-and-suspenders regexes for plain-text noise that's *not* wrapped in
+// ANSI (Node v20 AWS-SDK deprecation warning lines come from Node itself
+// before gitclaw can style them, and the warning is dumped on stderr which
+// FastAPI merges into stdout). These run after ANSI extraction.
+export const NOISE_PATTERNS: RegExp[] = [
+  /^\(node:\d+\)/, //                              (node:12345) Warning: …
+  /^\[system\]\s+Node warning/,
+  /NodeVersionSupportWarning/,
+  /versions published after/,
+  /will require node/,
+  /^You are running node/,
+  /To continue receiving updates/,
+  /and security updates/,
+  /More information can be found at:/,
+  /^\(Use `node/,
+  /^Task\s.*completed/,
+];
+
+export function isNoiseLine(line: string): boolean {
+  return NOISE_PATTERNS.some((p) => p.test(line));
+}
+
+/**
+ * Stateless one-shot strip — used as a final-pass cleanup on the
+ * accumulated bubble text. Strips ANSI, then drops banner/warning lines.
+ */
+export function stripNoise(text: string): string {
+  // Use a fresh state because this entry point is for already-accumulated
+  // text (which may have lost the ANSI escapes already) — anything still
+  // wrapped in dim/bold here is a stray fragment we should drop.
+  const plain = extractPlainText(text, { inDim: false, inBold: false });
+  return plain
+    .split("\n")
+    .filter((line) => line.trim() === "" || !isNoiseLine(line))
+    .join("\n")
+    .replace(/^\n+/, "");
+}
+
 /**
  * POST a prompt to gitclaw. Returns an AsyncIterable of StreamMsg events.
- * Each yielded message is one line of NDJSON from the backend.
+ * Each yielded message is one line of NDJSON from the backend. Banner /
+ * warning lines are filtered out at the source — consumers receive clean
+ * agent speech only.
  */
 export async function* streamRun(
   prompt: string,
+  agent?: string,
 ): AsyncIterableIterator<StreamMsg> {
   const res = await fetch(`${API_BASE}/api/run`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify(agent ? { prompt, agent } : { prompt }),
   });
 
   if (!res.body) {
@@ -74,6 +199,11 @@ export async function* streamRun(
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  // Dim/bold state has to persist across events because gitclaw can split a
+  // `\x1b[2m…\x1b[0m` region across multiple output events. Resetting per
+  // event would let dimmed content leak through whenever the dim-start
+  // arrived in one event and the content arrived in the next.
+  const ansiState: AnsiState = { inDim: false, inBold: false };
 
   try {
     while (true) {
@@ -84,11 +214,24 @@ export async function* streamRun(
       buffer = lines.pop() ?? "";
       for (const line of lines) {
         if (!line.trim()) continue;
+        let msg: StreamMsg;
         try {
-          yield JSON.parse(line) as StreamMsg;
+          msg = JSON.parse(line) as StreamMsg;
         } catch {
-          // skip malformed JSON (partial line during streaming)
+          continue; // partial line during streaming
         }
+        if (msg.type === "output" && typeof msg.text === "string") {
+          // Drop anything inside a bold/dim region (banner, tool output,
+          // memory dump) and any leftover plain-text Node warnings.
+          const plain = extractPlainText(msg.text, ansiState);
+          const cleaned = plain
+            .split("\n")
+            .filter((l) => l.trim() === "" || !isNoiseLine(l))
+            .join("\n");
+          if (!cleaned.trim()) continue;
+          msg = { ...msg, text: cleaned };
+        }
+        yield msg;
       }
     }
   } finally {
@@ -219,10 +362,66 @@ export async function getHoldings(): Promise<{ holdings: Holding[] }> {
   return res.json();
 }
 
+/**
+ * URL pointing at the example CSV — for "Download template" link in the UI.
+ */
+export const HOLDINGS_EXAMPLE_URL = `${API_BASE}/api/data/holdings/example`;
+
+export type OnboardFormPayload = {
+  goal_type: string;
+  target_amount: number;
+  target_date: string;
+  portfolio_value: number;
+  stocks_value?: number;
+  cash_value?: number;
+  other_value?: number;
+  monthly_income: number;
+  monthly_outflows: { label: string; amount: number }[];
+  risk_tolerance: "low" | "medium" | "high";
+  hard_constraints: string[];
+};
+
+/**
+ * One-shot structured-form onboarding. Writes user_plan.md and RULES.md
+ * directly. Replaces the slower chatbot intake for users who'd rather fill
+ * a form than chat with an agent.
+ */
+export async function onboardFromForm(payload: OnboardFormPayload): Promise<{
+  ok: boolean;
+  user_plan_size: number;
+  rules_size: number;
+  net_investable: number;
+}> {
+  const res = await fetch(`${API_BASE}/api/data/onboard`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? `Onboard failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Seed demo state. Overwrites memory/user_plan.md, RULES.md, data/holdings.json
+ * from sanitized templates so a new user can run a session immediately.
+ */
+export async function seedDemo(): Promise<{ ok: boolean; seeded: string[] }> {
+  const res = await fetch(`${API_BASE}/api/data/seed-demo`, { method: "POST" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? `Seed failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function uploadHoldings(file: File): Promise<{
   ok: boolean;
   count: number;
   holdings: Holding[];
+  mapped_via?: string;
 }> {
   const form = new FormData();
   form.append("file", file);

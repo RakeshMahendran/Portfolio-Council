@@ -4,9 +4,20 @@ Reads holdings from data/holdings.json (canonical location) if present.
 Falls back to a small sample portfolio if no holdings file exists, so the
 script can run as a demo on a fresh clone without crashing.
 """
-import yfinance as yf
 import json
 import os
+import sys
+
+try:
+    import yfinance as yf
+except ImportError:
+    # Clean exit so the analyst agent gets a readable message instead of a
+    # Python traceback. The agent's SOUL.md tells it to fall back to
+    # "DATA UNAVAILABLE" sections in this case.
+    print("ERROR: yfinance is not installed. Cannot fetch live market data.")
+    print("       Install with: pip install yfinance")
+    print("       (Analyst will report holdings without live prices.)")
+    sys.exit(2)
 
 # Resolve repo root (parent of scripts/)
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

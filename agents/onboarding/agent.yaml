@@ -1,6 +1,7 @@
 spec_version: "0.1.0"
 name: onboarding
-description: First-time setup agent. Asks user 8 questions, writes memory/user_plan.md, generates RULES.md.
+version: 0.1.0
+description: Conversational financial-intake agent. Captures the user's goals, finances, and constraints one short question at a time, then writes memory/user_plan.md and generates RULES.md.
 model:
   preferred: "amazon-bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 tools: [cli, read, write, memory]

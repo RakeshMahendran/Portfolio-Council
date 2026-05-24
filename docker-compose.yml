@@ -1,0 +1,66 @@
+# Portfolio Council — one-command setup.
+#
+#   docker compose up
+#
+# Then visit http://localhost:3000.
+#
+# What this launches:
+#   - backend (FastAPI + gitclaw + git) on :8000
+#   - frontend (Next.js dev server) on :3000
+#
+# Both services bind-mount the repo so hot-reload works for code changes.
+# The agent runtime data (memory/, data/, workspace/, reports/, RULES.md)
+# also lives in the bind mount — your data stays in YOUR clone of the repo.
+#
+# Network: both published ports are bound to 127.0.0.1 only — the API is not
+# reachable from other machines on the same wifi. There is currently no auth
+# on /api/run, so LAN exposure would let any neighbour drain your Bedrock
+# budget by spamming prompts. If you genuinely need remote access for a demo,
+# change "127.0.0.1:..." to "0.0.0.0:..." AND add a shared-secret header.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: portfolio-council-backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Mount the entire repo so backend reads agent files + writes workspace/
+      - .:/app
+      # Persist node_modules from gitclaw global install so we don't lose it
+      # (gitclaw was installed in /usr/lib/node_modules at build time — safe)
+    environment:
+      # Required: at least one provider needs to be set. Bedrock is preferred.
+      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      # Optional Azure OpenAI fallback
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_BASE_URL=${AZURE_OPENAI_BASE_URL:-}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-preview}
+      - AZURE_OPENAI_DEPLOYMENT_NAME_MAP=${AZURE_OPENAI_DEPLOYMENT_NAME_MAP:-gpt-5-mini=gpt-5-mini}
+    working_dir: /app/server
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: portfolio-council-frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./frontend:/app
+      # Anonymous volume to keep node_modules out of the bind mount
+      # (so host filesystem doesn't override the container's installed packages)
+      - /app/node_modules
+      - /app/.next
+    environment:
+      # Frontend talks to backend over the host port (mapped from backend container)
+      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      - backend
+    restart: unless-stopped

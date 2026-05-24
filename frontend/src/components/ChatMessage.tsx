@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 import { stripAnsi } from "@/lib/api";
 
 export type ChatRole = "user" | "agent" | "system";
@@ -29,6 +30,11 @@ export function ChatMessage({
   timestamp,
 }: ChatMessageProps) {
   const clean = stripAnsi(text);
+  // Timestamps are formatted with the local timezone, so the server-rendered
+  // value would mismatch the client on hydration. Only render after mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const showTimestamp = mounted && Boolean(timestamp);
 
   if (role === "system") {
     return (
@@ -37,13 +43,13 @@ export function ChatMessage({
           <div
             className={clsx(
               "inline-block rounded-lg border border-zinc-800 bg-zinc-900",
-              "px-3 py-2 text-xs italic text-zinc-500 whitespace-pre-wrap",
+              "px-3.5 py-2 text-[13px] italic text-zinc-400 whitespace-pre-wrap",
             )}
           >
             {clean}
             {streaming && <PulseCursor />}
           </div>
-          {timestamp && (
+          {showTimestamp && (
             <div className="text-[10px] text-zinc-700 mt-1">{timestamp}</div>
           )}
         </div>
@@ -63,7 +69,7 @@ export function ChatMessage({
       <div className={clsx("max-w-2xl flex flex-col", isUser ? "items-end" : "items-start")}>
         <div
           className={clsx(
-            "rounded-lg border px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+            "rounded-xl border px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap",
             isUser
               ? "bg-blue-600/20 border-blue-500/40 text-blue-50"
               : "bg-zinc-800 border-zinc-700 text-zinc-100",
@@ -72,10 +78,10 @@ export function ChatMessage({
           {clean}
           {streaming && <PulseCursor />}
         </div>
-        {timestamp && (
+        {showTimestamp && (
           <div
             className={clsx(
-              "text-[10px] text-zinc-600 mt-1 px-1",
+              "text-[11px] text-zinc-500 mt-1 px-1",
               isUser ? "text-right" : "text-left",
             )}
           >
@@ -90,7 +96,7 @@ export function ChatMessage({
 function PulseCursor() {
   return (
     <span
-      className="inline-block w-1.5 h-4 bg-zinc-400 align-middle ml-0.5 animate-pulse"
+      className="inline-block w-1.5 h-5 bg-zinc-400 align-middle ml-0.5 animate-pulse"
       aria-hidden
     />
   );

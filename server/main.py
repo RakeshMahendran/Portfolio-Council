@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 from typing import AsyncIterator
 
@@ -164,9 +165,61 @@ def revert(req: RevertRequest):
 
 class RunRequest(BaseModel):
     prompt: str
+    # When set, run the named sub-agent directly (e.g. "onboarding") instead of
+    # the parent orchestrator. The orchestrator role-plays sub-agents from its
+    # own SOUL.md description, which overrides the sub-agent's actual rules —
+    # so the onboarding chat must hit agents/onboarding/ directly.
+    agent: str | None = None
 
 
-async def stream_gitclaw(prompt: str) -> AsyncIterator[bytes]:
+# Whitelist of sub-agents the API will spawn directly. Anything not in here
+# falls back to the parent orchestrator at AGENT_DIR.
+SUB_AGENTS = {"onboarding", "analyst", "strategist", "risk", "execution"}
+
+
+def resolve_agent_dir(agent: str | None) -> Path:
+    if not agent:
+        return AGENT_DIR
+    if agent not in SUB_AGENTS:
+        raise HTTPException(status_code=400, detail=f"Unknown agent: {agent}")
+    return AGENT_DIR / "agents" / agent
+
+
+# Lines that should never reach the chat bubble. gitclaw prints a startup
+# banner ("onboarding v0.1.0", Model:, Tools:, etc.) and Node v20 emits an
+# AWS-SDK deprecation warning — neither is part of the agent's response.
+# gitclaw wraps these in ANSI escapes (\x1b[1m…\x1b[0m), so we strip ANSI
+# before matching.
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
+_NOISE_PATTERNS = (
+    re.compile(r"^[A-Za-z0-9_-]+\s+v\S+\s*$"),       # banner header (name v0.1.0)
+    re.compile(r"^Model:\s"),
+    re.compile(r"^Tools:\s"),
+    re.compile(r"^Skills:\s"),
+    re.compile(r"^Agents:\s"),
+    re.compile(r"^Type\s+/\S+\s+to\s+"),               # "Type /skills to list skills..."
+    re.compile(r"^\(node:\d+\)"),                      # Node process warning
+    re.compile(r"^\[system\]\s+Node warning"),         # gitclaw-prefixed copy
+    re.compile(r"NodeVersionSupportWarning"),
+    re.compile(r"versions published after"),
+    re.compile(r"will require node"),
+    re.compile(r"^You are running node"),
+    re.compile(r"To continue receiving updates"),
+    re.compile(r"and security updates"),
+    re.compile(r"More information can be found at:"),
+    re.compile(r"^\(Use `node"),
+    re.compile(r"^Task\s.*completed"),                 # "Task abc completed in 2.3s"
+)
+
+
+def _is_noise(line: str) -> bool:
+    clean = _ANSI_RE.sub("", line).strip()
+    if not clean:
+        return False
+    return any(p.search(clean) for p in _NOISE_PATTERNS)
+
+
+async def stream_gitclaw(prompt: str, agent_dir: Path) -> AsyncIterator[bytes]:
     """
     Run gitclaw subprocess; stream each stdout line back to the client
     as one line of NDJSON ({"type": "output", "text": "..."}).
@@ -175,13 +228,13 @@ async def stream_gitclaw(prompt: str) -> AsyncIterator[bytes]:
     def sse_event(obj: dict) -> bytes:
         return (json.dumps(obj) + "\n").encode("utf-8")
 
-    yield sse_event({"type": "session_start", "agent_dir": str(AGENT_DIR)})
+    yield sse_event({"type": "session_start", "agent_dir": str(agent_dir)})
 
     try:
         process = await asyncio.create_subprocess_exec(
             "gitclaw",
             "--dir",
-            str(AGENT_DIR),
+            str(agent_dir),
             "--prompt",
             prompt,
             stdout=asyncio.subprocess.PIPE,
@@ -195,14 +248,14 @@ async def stream_gitclaw(prompt: str) -> AsyncIterator[bytes]:
             text = raw.decode("utf-8", errors="replace").rstrip("\n")
             if not text:
                 continue
+            if _is_noise(text):
+                continue
             # Heuristic: gitclaw prefixes tool calls with "▶" and errors with "✗"
             event_type = "output"
             if text.lstrip().startswith("▶"):
                 event_type = "tool_use"
             elif text.lstrip().startswith("✗"):
                 event_type = "error_line"
-            elif text.startswith("Task ") and "completed" in text:
-                event_type = "task_end"
             elif text.startswith("["):
                 event_type = "system"
             yield sse_event({"type": event_type, "text": text})
@@ -225,8 +278,9 @@ async def run_session(req: RunRequest):
     The frontend reads response.body chunk by chunk and appends each
     line to the Live Activity panel in real time.
     """
+    agent_dir = resolve_agent_dir(req.agent)
     return StreamingResponse(
-        stream_gitclaw(req.prompt),
+        stream_gitclaw(req.prompt, agent_dir),
         media_type="application/x-ndjson",
         headers={
             "Cache-Control": "no-cache, no-transform",
