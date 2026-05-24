@@ -14,13 +14,43 @@ export type QuickReplyOption = {
 };
 
 /**
+ * Pull out the question portion of an agent message — the trailing run of
+ * sentences that all end with `?`. Confirmation prefixes get discarded.
+ *
+ * Examples:
+ *   "Got it — low risk tolerance. Are there any to avoid? Like F&O?"
+ *     → "are there any to avoid? like f&o?"   (both ?-sentences kept, '.' is the boundary)
+ *   "What is your risk tolerance?"
+ *     → "what is your risk tolerance?"
+ *
+ * Falls back to the whole text (lowercased) if no `?` is present at all.
+ */
+function lastQuestion(agentText: string): string {
+  const trimmed = agentText.trim();
+  if (!trimmed.includes("?")) return trimmed.toLowerCase();
+  // Split into sentences using `.`, `!`, `?` as terminators (kept on the
+  // preceding sentence via the lookbehind).
+  const sentences = trimmed.split(/(?<=[.!?])\s+/);
+  const collected: string[] = [];
+  for (let i = sentences.length - 1; i >= 0; i--) {
+    if (sentences[i].trimEnd().endsWith("?")) {
+      collected.unshift(sentences[i]);
+    } else {
+      break; // hit the confirmation prefix — stop walking back
+    }
+  }
+  if (collected.length === 0) return trimmed.toLowerCase();
+  return collected.join(" ").toLowerCase();
+}
+
+/**
  * Detect what kind of question the agent just asked, return matching options.
  * Returns null if no pattern matches — UI falls back to plain text input.
  */
 export function detectQuickReplies(
   agentText: string,
 ): { kind: string; options: QuickReplyOption[]; multiple: boolean } | null {
-  const t = agentText.toLowerCase();
+  const t = lastQuestion(agentText);
 
   // Risk tolerance
   if (
@@ -89,13 +119,21 @@ export function detectQuickReplies(
     };
   }
 
-  // Confirmation prompts
+  // Confirmation prompts — match the various ways the agent asks "ready to
+  // save your plan?" in practice (transcript-observed phrasings).
   if (
     t.includes("save this") ||
+    t.includes("save your plan") ||
+    t.includes("save the plan") ||
+    t.includes("before i save") ||
     t.includes("confirm") ||
     t.includes("shall i save") ||
+    t.includes("should i save") ||
     t.includes("ready to save") ||
-    t.includes("looks good")
+    t.includes("looks good") ||
+    t.includes("look right") ||
+    t.includes("looks right") ||
+    t.includes("want to edit")
   ) {
     return {
       kind: "confirm",

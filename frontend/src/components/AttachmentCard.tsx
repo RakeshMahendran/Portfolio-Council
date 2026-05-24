@@ -29,9 +29,23 @@ export type AttachmentCardProps = {
 /**
  * Detect whether the agent's latest question is asking about expenses or
  * holdings, so the right attachment card can be shown.
+ *
+ * We scope detection to the trailing run of `?`-ending sentences only —
+ * otherwise a confirmation like "Got it, your holdings are saved. What's
+ * your goal?" would falsely trigger the holdings card because the prose
+ * mentions holdings in passing.
  */
 export function detectAttachmentMode(agentText: string): AttachmentMode | null {
-  const t = agentText.toLowerCase();
+  const trimmed = agentText.trim();
+  if (!trimmed.includes("?")) return null;
+  const sentences = trimmed.split(/(?<=[.!?])\s+/);
+  const collected: string[] = [];
+  for (let i = sentences.length - 1; i >= 0; i--) {
+    if (sentences[i].trimEnd().endsWith("?")) collected.unshift(sentences[i]);
+    else break;
+  }
+  if (collected.length === 0) return null;
+  const t = collected.join(" ").toLowerCase();
   const isExpenseAsk =
     /\bmonthly\s+(outflow|outflows|expense|expenses|spend|spending)\b/.test(
       t,
