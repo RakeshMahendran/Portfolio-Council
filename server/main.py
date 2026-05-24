@@ -31,6 +31,7 @@ from git_ops import (
     git_show,
 )
 from data_routes import router as data_router
+from session_routes import router as session_router
 
 # Agent repo is the parent of server/ (i.e. portfolio-agent/)
 AGENT_DIR = Path(__file__).resolve().parent.parent
@@ -41,8 +42,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Mount data management routes (/api/data/*)
+# Mount data management routes (/api/data/*) and session routes (/api/session/*, /api/workspace/*)
 app.include_router(data_router)
+app.include_router(session_router)
 
 app.add_middleware(
     CORSMiddleware,

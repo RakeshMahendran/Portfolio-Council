@@ -1,34 +1,54 @@
-"""Analyze current portfolio holdings with full 46-metric deep analysis."""
+"""Analyze current portfolio holdings with full 46-metric deep analysis.
+
+Reads holdings from data/holdings.json (canonical location) if present.
+Falls back to a small sample portfolio if no holdings file exists, so the
+script can run as a demo on a fresh clone without crashing.
+"""
 import yfinance as yf
 import json
 import os
 
-holdings = [
-    {"sym": "ADANIGREEN", "qty": 9, "avg": 1672.38, "inv": 15051},
-    {"sym": "AURIONPRO", "qty": 18, "avg": 823.00, "inv": 14814},
-    {"sym": "BAJAJHFL", "qty": 121, "avg": 149.87, "inv": 18134},
-    {"sym": "BSE", "qty": 11, "avg": 1997.58, "inv": 21973},
-    {"sym": "COCHINSHIP", "qty": 7, "avg": 1284.55, "inv": 8992},
-    {"sym": "CUMMINSIND", "qty": 3, "avg": 3504.58, "inv": 10514},
-    {"sym": "HAL", "qty": 4, "avg": 4312.41, "inv": 17250},
-    {"sym": "IPL", "qty": 45, "avg": 221.29, "inv": 9958},
-    {"sym": "IREDA", "qty": 249, "avg": 184.04, "inv": 45825},
-    {"sym": "JPPOWER", "qty": 667, "avg": 17.97, "inv": 11985},
-    {"sym": "MAZDOCK", "qty": 8, "avg": 2886.25, "inv": 23090},
-    {"sym": "PENIND", "qty": 42, "avg": 233.00, "inv": 9786},
-    {"sym": "PRAJIND", "qty": 22, "avg": 678.42, "inv": 14925},
-    {"sym": "RVNL", "qty": 38, "avg": 443.24, "inv": 16843},
-    {"sym": "TRANSRAILL", "qty": 47, "avg": 614.29, "inv": 28872},
+# Resolve repo root (parent of scripts/)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HOLDINGS_FILE = os.path.join(REPO_ROOT, "data", "holdings.json")
+
+# Sample portfolio used only when data/holdings.json is missing.
+# Lets new users run the analyzer without uploading data first.
+SAMPLE_HOLDINGS = [
+    {"sym": "RELIANCE", "qty": 12, "avg": 2450.50},
+    {"sym": "TCS", "qty": 8, "avg": 3920.00},
+    {"sym": "HDFCBANK", "qty": 25, "avg": 1580.30},
+    {"sym": "INFY", "qty": 15, "avg": 1450.75},
+    {"sym": "ICICIBANK", "qty": 30, "avg": 1120.40},
+    {"sym": "HAL", "qty": 4, "avg": 4312.41},
+    {"sym": "BSE", "qty": 11, "avg": 1997.58},
+    {"sym": "SBIN", "qty": 40, "avg": 755.20},
+]
+SAMPLE_ETFS = [
+    {"sym": "GOLDBEES", "qty": 50, "avg": 87.86},
+    {"sym": "NIFTYBEES", "qty": 100, "avg": 245.20},
 ]
 
-# ETFs — just get current price
-etfs = [
-    {"sym": "GOLDBEES", "qty": 118, "avg": 87.86, "inv": 10367},
-    {"sym": "SILVERBEES", "qty": 189, "avg": 265.26, "inv": 50135},
-    {"sym": "MIDCAP", "qty": 3053, "avg": 16.98, "inv": 51841},
-    {"sym": "SMALLCAP", "qty": 950, "avg": 41.52, "inv": 39442},
-    {"sym": "TOP100CASE", "qty": 5000, "avg": 10.50, "inv": 52514},
-]
+
+def _load_holdings():
+    """Read data/holdings.json if it exists, else use sample data."""
+    if os.path.exists(HOLDINGS_FILE):
+        with open(HOLDINGS_FILE) as f:
+            data = json.load(f)
+        normalized = []
+        for h in data:
+            # Accept both {sym/qty/avg} and {symbol/qty/avg_price} shapes
+            sym = h.get("sym") or h.get("symbol")
+            qty = h.get("qty") or h.get("quantity")
+            avg = h.get("avg") or h.get("avg_price") or h.get("avgPrice")
+            if sym is None or qty is None or avg is None:
+                continue
+            normalized.append({"sym": sym, "qty": qty, "avg": avg})
+        return normalized, []  # ETFs treated same as stocks now
+    return SAMPLE_HOLDINGS, SAMPLE_ETFS
+
+
+holdings, etfs = _load_holdings()
 
 results = []
 for h in holdings:
@@ -44,7 +64,7 @@ for h in holdings:
         cmp = float(hist["Close"].iloc[-1])
         pnl_pct = ((cmp - h["avg"]) / h["avg"]) * 100
         cur_val = cmp * h["qty"]
-        pnl_amt = cur_val - h["inv"]
+        pnl_amt = cur_val - (h.get("inv") or h["qty"] * h["avg"])
 
         rev_gr = (info.get("revenueGrowth", 0) or 0) * 100
         earn_gr = (info.get("earningsGrowth", 0) or 0) * 100
@@ -139,7 +159,7 @@ for h in holdings:
 
         r = {
             "sym": sym, "qty": h["qty"], "avg": h["avg"], "cmp": round(cmp, 2),
-            "inv": h["inv"], "cur_val": round(cur_val, 0), "pnl": round(pnl_amt, 0),
+            "inv": (h.get("inv") or h["qty"] * h["avg"]), "cur_val": round(cur_val, 0), "pnl": round(pnl_amt, 0),
             "pnl_pct": round(pnl_pct, 1), "sector": sector, "mcap": round(mcap, 0),
             "rev_gr": round(rev_gr, 1), "earn_gr": round(earn_gr, 1),
             "earn_qoq": round(earn_qoq, 1), "eps_gr": round(eps_gr, 1),

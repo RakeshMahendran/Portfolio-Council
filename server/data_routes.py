@@ -242,9 +242,18 @@ async def upload_holdings(file: UploadFile = File(...)):
       - avg_price / avg price / cost
 
     JSON must already be an array of {symbol, qty, avg_price} objects.
+
+    Size limit: 10 MB. Larger files are rejected to prevent OOM.
     """
+    MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
     fname = (file.filename or "").lower()
     content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            413,
+            f"File too large ({len(content) / 1024 / 1024:.1f} MB). "
+            f"Limit is {MAX_UPLOAD_BYTES // 1024 // 1024} MB.",
+        )
 
     if fname.endswith(".json"):
         try:

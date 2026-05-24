@@ -4,17 +4,44 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import AuthShell from "@/components/AuthShell";
 import GoalProgress from "@/components/GoalProgress";
-import { getSetupStatus } from "@/lib/api";
+import { getSetupStatus, getUserPlan } from "@/lib/api";
 import type { SetupStatus } from "@/lib/types";
+
+function parseInr(s: string | undefined): number | undefined {
+  if (!s) return undefined;
+  const cleaned = s.replace(/[,₹\s]/g, "");
+  const n = Number(cleaned);
+  return isNaN(n) ? undefined : n;
+}
 
 export default function Home() {
   const [status, setStatus] = useState<SetupStatus | null>(null);
+  const [goal, setGoal] = useState<{
+    target?: number;
+    current?: number;
+    date?: string;
+  }>({});
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const s = await getSetupStatus();
-      if (!cancelled) setStatus(s);
+      if (cancelled) return;
+      setStatus(s);
+      // Pull real numbers from user_plan if it exists
+      if (s.ready) {
+        try {
+          const p = await getUserPlan();
+          if (cancelled) return;
+          setGoal({
+            target: parseInr(p.parsed.targetAmount),
+            current: parseInr(p.parsed.portfolioValue),
+            date: p.parsed.targetDate,
+          });
+        } catch {
+          // ignore — fall back to no goal data
+        }
+      }
     })();
     return () => {
       cancelled = true;
@@ -101,9 +128,10 @@ export default function Home() {
             Your goal
           </div>
           <GoalProgress
-            targetAmount={4000000}
-            currentValue={684000}
-            targetDate="May 2027"
+            targetAmount={goal.target}
+            currentValue={goal.current}
+            targetDate={goal.date ?? "—"}
+            loading={!Object.keys(goal).length}
           />
         </section>
 
@@ -127,10 +155,10 @@ export default function Home() {
               description="Compare current trajectory with target milestone"
             />
             <ActionCard
-              href="/onboarding?mode=update"
-              icon="🔧"
-              title="Update plan"
-              description="Re-run onboarding to revise goals or constraints"
+              href="/profile"
+              icon="👤"
+              title="Profile &amp; data"
+              description="View, edit, or replace your plan, holdings, and rules"
             />
           </div>
         </section>

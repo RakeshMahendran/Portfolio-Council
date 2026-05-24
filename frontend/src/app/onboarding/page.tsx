@@ -195,7 +195,9 @@ export default function OnboardingPage() {
           ) {
             const chunk = evt.text ?? "";
             if (!chunk) continue;
-            acc += (acc && !acc.endsWith("\n") ? "" : "") + chunk;
+            // Insert a newline between gitclaw output lines that don't already end with one.
+            // (Previous version had a no-op ternary that always returned "".)
+            acc += (acc && !acc.endsWith("\n") ? "\n" : "") + chunk;
             const next = acc;
             setMessages((prev) =>
               prev.map((m) =>
