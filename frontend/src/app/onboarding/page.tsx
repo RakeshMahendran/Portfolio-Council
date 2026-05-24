@@ -14,7 +14,7 @@ import ChatMessage, { type ChatRole } from "@/components/ChatMessage";
 import { QuickReplies } from "@/components/QuickReplies";
 import SiteHeader from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getLog, streamRun, stripAnsi, stripNoise } from "@/lib/api";
+import { getSetupStatus, streamRun, stripAnsi, stripNoise } from "@/lib/api";
 
 type Message = {
   id: string;
@@ -97,9 +97,9 @@ export default function OnboardingPage() {
   }, []);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
-  // Tracks the timestamp of the most recent onboarding commit seen on mount.
-  // Anything newer than this is treated as "just written by this session".
-  const baselineCommitHashRef = useRef<string | null>(null);
+  // True if user_plan.md was already present when the page mounted — used to
+  // skip the auto-redirect for returning users whose plan is already saved.
+  const userPlanAtMountRef = useRef<boolean | null>(null);
 
   // ── Auto-scroll to bottom on new messages or streaming updates ──────────
   useEffect(() => {
@@ -108,45 +108,35 @@ export default function OnboardingPage() {
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  // ── Capture baseline of recent commits on mount ─────────────────────────
+  // ── Capture baseline file-existence on mount ────────────────────────────
+  // The previous version polled the git log for keyword hits, which broke
+  // whenever gitclaw committed under a generic subject. Direct file probing
+  // via /api/data/files is the ground truth.
   useEffect(() => {
     (async () => {
       try {
-        const commits = await getLog(20);
-        if (commits.length > 0) {
-          baselineCommitHashRef.current = commits[0].hash;
-        }
+        const status = await getSetupStatus();
+        userPlanAtMountRef.current = status.hasUserPlan;
       } catch {
-        // ignore — baseline just defaults to null
+        userPlanAtMountRef.current = false;
       }
     })();
   }, []);
 
-  // ── Poll /api/log for a new onboarding commit while running ─────────────
+  // ── Poll /api/data/files for newly-written user_plan + rules ────────────
   useEffect(() => {
     if (completed) return;
     let cancelled = false;
 
     const interval = setInterval(async () => {
       try {
-        const commits = await getLog(20);
+        const status = await getSetupStatus();
         if (cancelled) return;
-        const baseline = baselineCommitHashRef.current;
-        const idx = baseline
-          ? commits.findIndex((c) => c.hash === baseline)
-          : commits.length;
-        const fresh = idx === -1 ? commits : commits.slice(0, idx);
-        const hit = fresh.find((c) => {
-          const s = c.subject.toLowerCase();
-          const b = (c.body ?? "").toLowerCase();
-          return (
-            s.includes("onboarding") ||
-            s.includes("user_plan") ||
-            s.includes("user plan") ||
-            b.includes("user_plan.md")
-          );
-        });
-        if (hit) {
+        // Skip the auto-redirect if the plan was already there when the
+        // page loaded — returning users land here and we don't want to
+        // bounce them to /processing without them doing anything.
+        const wasAlreadyPresent = userPlanAtMountRef.current === true;
+        if (!wasAlreadyPresent && status.hasUserPlan && status.hasRules) {
           setCompleted(true);
         }
       } catch {

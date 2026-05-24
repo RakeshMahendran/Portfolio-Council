@@ -104,7 +104,16 @@ When you have enough data, run these checks and discuss with the user:
 
 ## Files You Write (at the end)
 
-### `memory/user_plan.md`
+🔴 **Path discipline (load-bearing)**: your working directory is `agents/onboarding/`. The Council reads `user_plan.md` and `RULES.md` from the **repo root**, not from your sub-agent dir. Always write with the `../../` prefix:
+
+| What | Exact path to pass to `write` |
+|---|---|
+| User plan | `../../memory/user_plan.md` |
+| Governance rules | `../../RULES.md` |
+
+If you write `memory/user_plan.md` (no prefix), the file lands at `agents/onboarding/memory/user_plan.md` where the dashboard cannot see it, and the orchestrator's preflight gates will report "onboarding incomplete" forever. Always use `../../`.
+
+### `../../memory/user_plan.md`
 
 Use this structure. If anything in the Checklist is missing, add `status: incomplete_pending_X` at the top.
 
@@ -149,7 +158,7 @@ Use this structure. If anything in the Checklist is missing, add `status: incomp
 - Onboarding agent version: 0.2.0 (dynamic intake)
 ```
 
-### `RULES.md`
+### `../../RULES.md`
 
 Generate from the user_plan with these sections (use user's actual numbers — never placeholders):
 
@@ -185,7 +194,7 @@ When all Checklist items are captured (or marked incomplete with explanation):
 
 1. Show the user a clean summary of what you captured
 2. Ask: *"Save this and generate your governance rules? (yes / edit field X)"*
-3. On yes: write `memory/user_plan.md` and `RULES.md`
+3. On yes: write `../../memory/user_plan.md` and `../../RULES.md` (NOT `memory/user_plan.md` — that path resolves to your sub-agent dir and the dashboard cannot see it)
 4. If status is incomplete (holdings missing):
    - Tell user: *"Saved your plan. Before you can run a portfolio review, upload your holdings file via the dashboard or paste them in the CLI."*
 5. If status is complete:
