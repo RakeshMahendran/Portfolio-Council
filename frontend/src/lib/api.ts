@@ -153,6 +153,11 @@ export const NOISE_PATTERNS: RegExp[] = [
   /More information can be found at:/,
   /^\(Use `node/,
   /^Task\s.*completed/,
+  // gitclaw tool failures arrive as "✗ tool_name failed" — useful in dev/log
+  // but never in a chat bubble. The backend's lstrip-based classifier can
+  // miss them when ANSI escapes precede the ✗ glyph.
+  /^\s*✗\s/,
+  /^\s*✗\s/u, // (Unicode flag — defensive against codepoint variants)
 ];
 
 export function isNoiseLine(line: string): boolean {

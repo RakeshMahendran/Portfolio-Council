@@ -97,6 +97,25 @@ HOLDINGS
 REQUIRED total but didn't itemize, capture the total, mark the itemization
 fields as "not provided", and move on.
 
+### Holdings inference rule
+
+The holdings question is about **tradeable instruments** (stocks, mutual
+funds, gold/index ETFs, bonds). It is NOT about FD, savings, or pure cash.
+
+Before asking the holdings question, check what the user told you for
+Current Portfolio Value:
+
+| User said their portfolio is… | What to do |
+|---|---|
+| Includes any equity / MF / ETF / bonds | Ask the holdings question normally |
+| **Only FD + cash** (e.g. "₹1L in FD, nothing else") | DO NOT ASK. Mark `## Initial Holdings` as "No tradeable holdings — portfolio is cash/FD only." |
+| Empty / not yet invested | DO NOT ASK. Mark as "No holdings yet — starting from scratch." |
+
+Re-asking a user about holdings when they have already said their portfolio
+is FD-only is the single fastest way to make them lose trust in the agent.
+The user_plan + dashboard upload flow are still available later if their
+situation changes.
+
 ## Cross-Checks You MUST Surface
 
 When you have enough data, run these checks and discuss with the user:

@@ -212,6 +212,7 @@ _NOISE_PATTERNS = (
     re.compile(r"More information can be found at:"),
     re.compile(r"^\(Use `node"),
     re.compile(r"^Task\s.*completed"),                 # "Task abc completed in 2.3s"
+    re.compile(r"^\s*✗\s"),                            # gitclaw tool-failure lines
 )
 
 
