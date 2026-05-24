@@ -159,23 +159,54 @@ function SessionPageInner() {
             const raw = stripAnsi(msg.text);
             const t = raw.toLowerCase();
 
-            if (t.includes("delegate to analyst") || /\bstep\s*1\b/.test(t)) {
-              transitionTo("analyst");
-            } else if (
-              t.includes("delegate to strategist") ||
-              /\bstep\s*2\b/.test(t)
-            ) {
-              transitionTo("strategist");
-            } else if (
-              t.includes("delegate to risk") ||
-              /\bstep\s*3\b/.test(t)
-            ) {
-              transitionTo("risk");
-            } else if (
-              t.includes("delegate to execution") ||
-              /\bstep\s*4\b/.test(t)
-            ) {
-              transitionTo("execution");
+            // Detect which agent is currently active via three signals,
+            // in priority order:
+            //
+            //  1. The literal gitclaw subprocess invocation
+            //     (`gitclaw --dir agents/<name>` or `agents/<name>/…`).
+            //     Most reliable — only fires when the orchestrator actually
+            //     spawns the sub-agent.
+            //  2. A workspace file-write that's keyed to an agent's role
+            //     (analysis→analyst, proposal→strategist, …). Useful for
+            //     marking that an agent FINISHED, but we re-use it to
+            //     transition TO that agent if signal 1 was missed.
+            //  3. Loose prose match: any "delegate*/handing*/now*/proceed*
+            //     <agent name>" phrasing. Backup for orchestrators that
+            //     don't use the cli tool for delegation.
+            const cliDir = raw.match(/agents\/(analyst|strategist|risk|execution)\b/i);
+            if (cliDir) {
+              transitionTo(cliDir[1].toLowerCase() as AgentKey);
+            } else {
+              const fileRole = raw.match(
+                /\b(analysis|proposal|verdict|orders)-\d{4}-\d{2}-\d{2}\.md\b/,
+              );
+              const roleToAgent: Record<string, AgentKey> = {
+                analysis: "analyst",
+                proposal: "strategist",
+                verdict: "risk",
+                orders: "execution",
+              };
+              if (fileRole && roleToAgent[fileRole[1]]) {
+                transitionTo(roleToAgent[fileRole[1]]);
+              } else {
+                const verb = /(delegate|delegating|handing|hand off|proceed|now|next).{0,40}/i;
+                if (verb.test(raw)) {
+                  // Check in REVERSE pipeline order so "Analyst completed.
+                  // Now to Strategist" lands on Strategist, not Analyst.
+                  // Risk-tolerance / risk-profile phrasings are excluded
+                  // from the Risk match because they show up in onboarding
+                  // contexts where the orchestrator merely mentions the
+                  // user's risk preference, not the Risk agent.
+                  if (/\bexecution\b/i.test(raw)) transitionTo("execution");
+                  else if (
+                    /\brisk\b/i.test(raw) &&
+                    !/risk tolerance|risk profile/i.test(raw)
+                  )
+                    transitionTo("risk");
+                  else if (/\bstrategist\b/i.test(raw)) transitionTo("strategist");
+                  else if (/\banalyst\b/i.test(raw)) transitionTo("analyst");
+                }
+              }
             }
 
             // Capture the most recent step text for the active agent
