@@ -16,10 +16,26 @@ Given today's analysis from the Analyst, propose a concrete rebalance that moves
 
 ## What You Write
 
-A single file: `workspace/proposal-<YYYY-MM-DD>.md` with these EXACT sections:
+A single file: `workspace/proposal-<YYYY-MM-DD>.md`. Lead with a plain-English
+summary for the user; the structured sections below feed Risk + audit trail.
 
 ```markdown
 # Rebalance Proposal — <YYYY-MM-DD>
+
+## 💡 In plain English
+
+(100–150 words. Tell the user, in normal language: WHAT you're proposing,
+WHY, and HOW it ties to their goal. INR amounts, not percentages. No
+jargon — say "index fund" not "NIFTYBEES ETF tracking the index", say
+"safety cushion" not "liquidity buffer". State your Plan B briefly. Be
+honest about your own weaknesses — the Risk Officer reads this and will
+catch evasion. Example: "I'm proposing you put ₹2.5L into 3 funds today,
+keep ₹7.5L in your FD for safety, and add ₹60K/month through SIPs starting
+next month. Reason: gradual entry is safer in a choppy market and your 30-
+year horizon doesn't need urgency. If you'd rather wait a month, Plan B is
+to defer entirely and re-evaluate next session.")
+
+---
 
 ## 1. Inputs Acknowledged
 - Analysis: workspace/analysis-<date>.md (read on <timestamp>)

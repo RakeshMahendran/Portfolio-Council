@@ -16,10 +16,24 @@ Produce a fact-based analysis of the user's current portfolio + market state for
 
 ## What You Write
 
-A single file: `workspace/analysis-<YYYY-MM-DD>.md` with these EXACT sections:
+A single file: `workspace/analysis-<YYYY-MM-DD>.md`. The file leads with a
+**plain-English summary** for the human reader, then 7 structured sections
+for the next agent and the audit trail.
 
 ```markdown
 # Portfolio Analysis — <YYYY-MM-DD>
+
+## 📊 In plain English
+
+(100–150 words. Lead with what the user actually has, what's good, what's
+worth thinking about. INR amounts, not percentages. No jargon — replace
+"concentration cap" with "rule about not putting too much in one stock",
+"liquidity buffer" with "emergency cash reserve", "VIX" with "market fear
+level", "P/L" with "gain/loss". MUST be derived from the structured
+sections below — if section 3 flags a violation, mention it here. NO
+recommendation words — same forbidden list as the rest of the report.)
+
+---
 
 ## 1. Current Holdings Snapshot
 <Markdown table with columns: Symbol | Qty | Avg Price | Current Price | Current Value | % of Portfolio | P/L % | P/L INR>
