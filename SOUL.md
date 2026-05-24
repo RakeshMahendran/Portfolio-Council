@@ -29,18 +29,33 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
 
    **PREFLIGHT GATES — check IN ORDER. Refuse session if any gate fails.**
 
-   **Gate A: Holdings data must exist.**
-   - `data/holdings.json` MUST exist and be non-empty (an array of at least one position).
-   - If missing or empty: DO NOT delegate to any agent. Tell the user:
-     > "Cannot run portfolio review — `data/holdings.json` is missing or empty.
-     > 
+   **Gate A: Holdings file must exist.**
+
+   The session **mode** is decided here.
+
+   - **`data/holdings.json` is missing entirely** → DO NOT delegate. Tell the user:
+     > "Cannot run portfolio review — `data/holdings.json` is missing.
+     >
      > Provide your holdings by either:
      >   1. Web UI: drag-and-drop your Excel/CSV file in the dashboard
      >   2. CLI: call the import-holdings skill on a CSV/Excel file
      >   3. Manual: paste a JSON array of {symbol, qty, avg_price} into data/holdings.json
-     > 
+     >
      > Then re-run 'Run portfolio review'."
-   - STOP. Do not proceed.
+     STOP.
+
+   - **`data/holdings.json` exists and contains `[]`** → check `memory/user_plan.md`'s
+     `## Initial Holdings` section.
+     - If it contains "no tradeable holdings", "fd only", "starting from scratch", or
+       any equivalent marker → **set session mode = INITIAL_ALLOCATION** and proceed.
+       The user is starting from cash/FD; the Strategist will propose an initial
+       deployment plan rather than a rebalance.
+     - Otherwise → tell the user "Holdings file is empty but your plan doesn't
+       declare FD-only — please upload holdings or re-run onboarding to mark
+       your portfolio as cash-only." STOP.
+
+   - **`data/holdings.json` contains at least one position** → **set session mode = REBALANCE**
+     and proceed normally.
 
    **Gate B: user_plan.md must be complete.**
    - Read `memory/user_plan.md`. If it contains the marker `status: incomplete` (e.g., missing Q3 portfolio value or Q8 holdings), refuse session.
@@ -51,6 +66,11 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
    - If missing, refuse with: "RULES.md not found — Onboarding never completed. Run setup."
 
    **If all 3 gates pass**, proceed with the full debate flow:
+
+   When delegating, **prepend the session mode** to each sub-agent's prompt:
+   - REBALANCE mode → "Today's session is a REBALANCE. Holdings file lists current positions."
+   - INITIAL_ALLOCATION mode → "Today's session is an INITIAL ALLOCATION. Holdings file is empty (`[]`) because the user is starting from cash/FD. Analyst: describe the cash position; Strategist: propose an initial deployment plan (target weights + first-tranche orders), not a rebalance; Risk: review the deployment plan against RULES; Execution: write the BUY orders. No sells in this mode."
+
 
      a. Delegate to **Analyst** → captures `workspace/analysis-<date>.md`
      b. Delegate to **Strategist** (pass analysis path) → captures `workspace/proposal-<date>.md`
