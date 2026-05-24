@@ -4,8 +4,8 @@ description: 'Create a comprehensive rebalancing proposal for Portfolio Council 
 learned_from: task:76f03209-8973-4452-8458-c5925b758abd
 learned_at: '2026-05-23T12:24:43.519Z'
 confidence: 1
-usage_count: 2
-success_count: 2
+usage_count: 3
+success_count: 3
 failure_count: 0
 negative_examples: []
 ---
