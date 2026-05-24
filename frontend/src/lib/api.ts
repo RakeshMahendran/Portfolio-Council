@@ -239,6 +239,84 @@ export async function* streamRun(
   }
 }
 
+// ─── /api/setup/* — provider credentials ──────────────────────────────────
+
+export type ProviderField = {
+  name: string;
+  label: string;
+  type: "text" | "password";
+  required?: boolean;
+  default?: string;
+  help?: string;
+};
+
+export type ProviderSpec = {
+  label: string;
+  description: string;
+  model_string: string;
+  fields: ProviderField[];
+};
+
+export type ProviderCatalog = {
+  providers: Record<string, ProviderSpec>;
+};
+
+export type ProviderStatus = {
+  ready: boolean;
+  active_provider: string | null;
+  configured: Record<string, boolean>;
+};
+
+export async function getProviderStatus(): Promise<ProviderStatus> {
+  const res = await fetch(`${API_BASE}/api/setup/status`);
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  return (await res.json()) as ProviderStatus;
+}
+
+export async function getProviderCatalog(): Promise<ProviderCatalog> {
+  const res = await fetch(`${API_BASE}/api/setup/providers`);
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  return (await res.json()) as ProviderCatalog;
+}
+
+export async function saveCredentials(
+  provider: string,
+  fields: Record<string, string>,
+  makeActive = true,
+): Promise<{
+  ok: boolean;
+  provider: string;
+  active: boolean;
+  model_string: string;
+}> {
+  const res = await fetch(`${API_BASE}/api/setup/credentials`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ provider, fields, make_active: makeActive }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+    throw new Error(data?.detail ?? `status ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function testProvider(
+  provider: string,
+  fields?: Record<string, string>,
+): Promise<{ ok: boolean; latency_ms: number; sample_text: string }> {
+  const res = await fetch(`${API_BASE}/api/setup/test`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ provider, fields }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+    throw new Error(data?.detail ?? `status ${res.status}`);
+  }
+  return await res.json();
+}
+
 /**
  * Strip ANSI escape sequences from gitclaw's terminal-colored output.
  */

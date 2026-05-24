@@ -14,7 +14,13 @@ import ChatMessage, { type ChatRole } from "@/components/ChatMessage";
 import { QuickReplies } from "@/components/QuickReplies";
 import SiteHeader from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getSetupStatus, streamRun, stripAnsi, stripNoise } from "@/lib/api";
+import {
+  getProviderStatus,
+  getSetupStatus,
+  streamRun,
+  stripAnsi,
+  stripNoise,
+} from "@/lib/api";
 
 type Message = {
   id: string;
@@ -95,6 +101,25 @@ export default function OnboardingPage() {
       ),
     );
   }, []);
+
+  // Provider-credentials gate: if no LLM is configured, /api/run will fail
+  // opaquely the moment the user sends their first message. Bounce to setup
+  // before that happens.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const p = await getProviderStatus();
+        if (!cancelled && !p.ready) router.replace("/setup/credentials");
+      } catch {
+        // Backend unreachable — leave the user here; they'll get an inline
+        // error on first send.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   // True if user_plan.md was already present when the page mounted — used to

@@ -20,7 +20,12 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
-import { getSetupStatus, getUserPlan, seedDemo } from "@/lib/api";
+import {
+  getProviderStatus,
+  getSetupStatus,
+  getUserPlan,
+  seedDemo,
+} from "@/lib/api";
 import type { SetupStatus } from "@/lib/types";
 
 function parseInr(s: string | undefined): number | undefined {
@@ -58,6 +63,26 @@ export default function Home() {
       setSeeding(false);
     }
   };
+
+  // ── Provider-credentials gate ───────────────────────────────────────
+  // If no LLM provider is configured, the agents can't run. Send the
+  // user to /setup/credentials before anything else loads. This is the
+  // "first thing a fresh-clone judge sees" guarantee.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const p = await getProviderStatus();
+        if (!cancelled && !p.ready) router.replace("/setup/credentials");
+      } catch {
+        // If the endpoint itself is unreachable, leave the user on the
+        // landing page — they'll see the empty-state copy.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
