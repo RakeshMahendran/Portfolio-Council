@@ -4,8 +4,8 @@ description: Translate Risk-approved rebalancing proposal into broker-ready exec
 learned_from: task:f46f9962-04c8-460e-ae62-5e68ccfacf71
 learned_at: '2026-05-23T12:42:46.381Z'
 confidence: 1
-usage_count: 0
-success_count: 0
+usage_count: 1
+success_count: 1
 failure_count: 0
 negative_examples: []
 ---
