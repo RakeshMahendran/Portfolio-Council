@@ -30,6 +30,7 @@ from git_ops import (
     git_revert,
     git_show,
 )
+from data_routes import router as data_router
 
 # Agent repo is the parent of server/ (i.e. portfolio-agent/)
 AGENT_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,9 @@ app = FastAPI(
     description="FastAPI bridge to the gitclaw-powered Portfolio Council agent.",
     version="0.1.0",
 )
+
+# Mount data management routes (/api/data/*)
+app.include_router(data_router)
 
 app.add_middleware(
     CORSMiddleware,
