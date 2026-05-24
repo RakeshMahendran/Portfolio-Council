@@ -108,13 +108,17 @@ Current Portfolio Value:
 | User said their portfolio is… | What to do |
 |---|---|
 | Includes any equity / MF / ETF / bonds | Ask the holdings question normally |
-| **Only FD + cash** (e.g. "₹1L in FD, nothing else") | DO NOT ASK. Mark `## Initial Holdings` as "No tradeable holdings — portfolio is cash/FD only." |
-| Empty / not yet invested | DO NOT ASK. Mark as "No holdings yet — starting from scratch." |
+| **Only FD + cash** (e.g. "₹1L in FD, nothing else") | DO NOT ASK. Mark `## Initial Holdings` as "No tradeable holdings — portfolio is cash/FD only." AND write `../../data/holdings.json` containing the literal `[]`. |
+| Empty / not yet invested | DO NOT ASK. Mark as "No holdings yet — starting from scratch." AND write `../../data/holdings.json` containing the literal `[]`. |
 
 Re-asking a user about holdings when they have already said their portfolio
 is FD-only is the single fastest way to make them lose trust in the agent.
-The user_plan + dashboard upload flow are still available later if their
-situation changes.
+
+**Why also write `data/holdings.json = []`**: the dashboard reads that file
+to decide whether to show an "upload holdings" banner. Writing the empty
+array tells downstream tools "holdings explicitly captured, intentionally
+empty" rather than "user hasn't dealt with this yet" — those are two
+different states and should look different on screen.
 
 ## Cross-Checks You MUST Surface
 

@@ -35,6 +35,26 @@ function parseInr(s: string | undefined): number | undefined {
   return isNaN(n) ? undefined : n;
 }
 
+/**
+ * Detects whether the user's plan explicitly declares they have NO tradeable
+ * holdings (FD-only, cash-only, or starting from scratch). Used to suppress
+ * the "Upload your holdings" banner — that nag is for users who deferred
+ * upload, not for users whose portfolio is genuinely 100% FD or cash.
+ */
+function holdingsEmptyByDesign(planText: string | undefined): boolean {
+  if (!planText) return false;
+  const t = planText.toLowerCase();
+  return (
+    t.includes("no tradeable holdings") ||
+    t.includes("portfolio is fd only") ||
+    t.includes("portfolio is cash") ||
+    t.includes("starting from scratch") ||
+    t.includes("no equity holdings") ||
+    t.includes("no holdings yet") ||
+    t.includes("cash-fd only")
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const [status, setStatus] = useState<SetupStatus | null>(null);
@@ -43,6 +63,7 @@ export default function Home() {
     current?: number;
     date?: string;
   } | null>(null);
+  const [holdingsAbsentByDesign, setHoldingsAbsentByDesign] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
   const onTryDemo = async () => {
@@ -90,7 +111,10 @@ export default function Home() {
       const s = await getSetupStatus();
       if (cancelled) return;
       setStatus(s);
-      if (s.ready) {
+      // Fetch user_plan whenever it exists, not just when everything is
+      // "ready" — we need its content to tell "holdings empty by design"
+      // from "holdings pending upload".
+      if (s.hasUserPlan && s.hasRules) {
         try {
           const p = await getUserPlan();
           if (cancelled) return;
@@ -99,6 +123,7 @@ export default function Home() {
             current: parseInr(p.parsed.portfolioValue),
             date: p.parsed.targetDate,
           });
+          setHoldingsAbsentByDesign(holdingsEmptyByDesign(p.raw));
         } catch {
           if (!cancelled) setGoal({});
         }
@@ -129,8 +154,14 @@ export default function Home() {
     );
   }
 
+  // "Onboarded" = plan + rules exist. Holdings is optional — the user can
+  // upload it later from the profile page. Previously this gate was
+  // `status.ready` (all three files), which sent users with a saved plan
+  // but no holdings back through onboarding on every home-page visit.
+  const onboarded = status.hasUserPlan && status.hasRules;
+
   // ─── New user — Welcome hero ───
-  if (!status.ready) {
+  if (!onboarded) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
         <SiteHeader />
@@ -208,6 +239,40 @@ export default function Home() {
       <SiteHeader />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-10 space-y-10">
+        {/* Holdings-pending banner — only for users who deferred upload, NOT
+            for users whose portfolio is explicitly FD/cash-only (where the
+            onboarding agent marked holdings as empty by design). */}
+        {!status.hasHoldings && !holdingsAbsentByDesign && (
+          <div className="rounded-xl border border-amber-700/40 bg-amber-950/20 px-5 py-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-medium text-amber-200 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  One step left — upload your holdings
+                </h3>
+                <p className="text-xs text-amber-100/70 mt-1 leading-relaxed max-w-xl">
+                  Your plan and governance rules are saved. Before the Council
+                  can run its first portfolio review, it needs to see what you
+                  currently hold — upload a CSV from your broker, or seed
+                  sample data to explore the flow.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="secondary" size="sm" onClick={onTryDemo} loading={seeding}>
+                  Seed sample
+                </Button>
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition"
+                >
+                  Upload holdings
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Goal section */}
         <section>
           <div className="flex items-center gap-2 mb-3">
@@ -230,8 +295,11 @@ export default function Home() {
             <h2 className="text-xs uppercase tracking-wider text-zinc-500">
               Quick actions
             </h2>
-            {!status.hasHoldings && (
+            {!status.hasHoldings && !holdingsAbsentByDesign && (
               <StatusBadge variant="warning">holdings needed</StatusBadge>
+            )}
+            {holdingsAbsentByDesign && (
+              <StatusBadge variant="neutral">portfolio is cash/FD only</StatusBadge>
             )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -241,7 +309,7 @@ export default function Home() {
               title="Run portfolio review"
               description="Full debate: Analyst → Strategist → Risk → Execution"
               primary
-              disabled={!status.hasHoldings}
+              disabled={!status.hasHoldings && !holdingsAbsentByDesign}
             />
             <ActionCard
               href="/session?prompt=Check+my+progress+toward+the+goal.+Show+projected+vs+required+returns."
