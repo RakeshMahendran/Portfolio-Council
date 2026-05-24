@@ -8,8 +8,10 @@ import { Suspense, useEffect, useState } from "react";
 
 import MarkdownView from "@/components/MarkdownView";
 import SiteHeader from "@/components/SiteHeader";
+import { AgentVisuals } from "@/components/visuals/AgentVisuals";
 import {
   getLatestSession,
+  getUserPlan,
   getWorkspaceFile,
   type SessionData,
 } from "@/lib/api";
@@ -67,6 +69,7 @@ function AgentDetailInner() {
   const [content, setContent] = useState<string | null>(null);
   const [filename, setFilename] = useState<string | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
+  const [userPlanContent, setUserPlanContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +99,17 @@ function AgentDetailInner() {
         if (!cancelled) {
           setContent(raw);
           setFilename(f);
+        }
+
+        // Analyst card needs Goal Progress, which lives in user_plan.md
+        // (not in the analysis artifact). Fetch only for that agent.
+        if (agent === "analyst" && !cancelled) {
+          try {
+            const plan = await getUserPlan();
+            if (!cancelled) setUserPlanContent(plan.raw);
+          } catch {
+            if (!cancelled) setUserPlanContent(null);
+          }
         }
       } catch (e) {
         if (!cancelled) {
@@ -177,9 +191,17 @@ function AgentDetailInner() {
           )}
 
           {content && !loading && (
-            <div className="border border-zinc-800 rounded-lg p-6 bg-zinc-900/30">
-              <MarkdownView content={content} />
-            </div>
+            <>
+              {/* Visual layer above the markdown — what a layperson reads first */}
+              <AgentVisuals
+                agent={agent}
+                content={content}
+                userPlanContent={userPlanContent}
+              />
+              <div className="border border-zinc-800 rounded-lg p-6 bg-zinc-900/30">
+                <MarkdownView content={content} />
+              </div>
+            </>
           )}
         </div>
       </main>
