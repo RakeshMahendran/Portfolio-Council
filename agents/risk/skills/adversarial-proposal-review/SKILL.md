@@ -4,8 +4,8 @@ description: Adversarially review Strategist's portfolio proposal against Hard/S
 learned_from: task:99f3f667-740c-4dd8-8513-347cceb2a36c
 learned_at: '2026-05-23T12:28:09.279Z'
 confidence: 1
-usage_count: 2
-success_count: 2
+usage_count: 3
+success_count: 3
 failure_count: 0
 negative_examples: []
 ---
