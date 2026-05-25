@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="(https://www.loom.com/share/b97de3bcb41f4fe8b703f39251481ef7)">Demo video</a> &bull;
+  <a href="https://www.loom.com/share/b97de3bcb41f4fe8b703f39251481ef7">Demo video</a> &bull;
   <a href="#what-it-does">What it does</a> &bull;
   <a href="#quickstart">Quickstart</a> &bull;
   <a href="#architecture">Architecture</a> &bull;
