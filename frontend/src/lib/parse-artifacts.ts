@@ -587,7 +587,9 @@ export function parseExecution(md: string): ExecutionParsed {
   const netMatch =
     md.match(/Net\s+(?:\w+\s+)?deployment[^\n]*?₹\s*([\d,.\-]+)/i) ??
     md.match(/Total\s*(?:capital\s*)?Deployment[^\n]*?₹\s*([\d,.]+)/i) ??
-    md.match(/Net\s*Proceeds(?:\s*After\s*Tax)?[^\n]*?₹\s*([\d,.]+)/i);
+    // Label form only ("Net Proceeds ...: ₹X") so prose like "reduce net
+    // proceeds by ~₹62" doesn't get mistaken for the deployment figure.
+    md.match(/Net\s*Proceeds[^\n:]*:\s*₹?\s*([\d,.]+)/i);
   const liqMatch =
     md.match(/Post[-\s]?execution\s*liquidity[^\n]*?₹\s*([\d,.]+)/i) ??
     md.match(/Post[-\s]?deployment\s*FD[^\n]*?₹\s*([\d,.]+)/i);

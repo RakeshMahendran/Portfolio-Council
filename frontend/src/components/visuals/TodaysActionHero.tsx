@@ -66,10 +66,19 @@ export function TodaysActionHero() {
           headline = "Awaiting Strategist amendments";
           detail = "Risk asked for revisions. The Council will re-run.";
         } else if (e && (e.orders.length > 0 || e.netDeployment !== null)) {
-          if (e.netDeployment !== null) {
-            headline = `Deploy ${shortInr(e.netDeployment)} today`;
+          // "Deploy ₹X" only makes sense when there are BUY/ALLOCATE orders.
+          // A sell-only rebalance raises cash (→ FD), so frame it as placing
+          // orders rather than deploying capital.
+          const hasBuys =
+            e.orders.some((o) => /^(BUY|ALLOCATE)$/i.test(o.action)) ||
+            (e.totalBuy ?? 0) > 0;
+          if (e.orders.length > 0) {
+            headline =
+              hasBuys && e.netDeployment !== null
+                ? `Deploy ${shortInr(e.netDeployment)} today`
+                : `Place ${e.orders.length} order${e.orders.length === 1 ? "" : "s"} today`;
           } else {
-            headline = `Place ${e.orders.length} order${e.orders.length === 1 ? "" : "s"} today`;
+            headline = `Deploy ${shortInr(e.netDeployment ?? 0)} today`;
           }
           if (e.orders.length > 0) {
             const symbols = e.orders.slice(0, 3).map((o) => o.symbol).join(", ");
