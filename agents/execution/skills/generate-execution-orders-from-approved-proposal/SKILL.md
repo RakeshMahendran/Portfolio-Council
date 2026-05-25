@@ -4,8 +4,8 @@ description: Translate the Risk-approved Strategist proposal into a broker-ready
 learned_from: task:f46f9962-04c8-460e-ae62-5e68ccfacf71
 learned_at: '2026-05-24T12:00:00.000Z'
 confidence: 1
-usage_count: 7
-success_count: 7
+usage_count: 9
+success_count: 9
 failure_count: 0
 negative_examples: []
 ---

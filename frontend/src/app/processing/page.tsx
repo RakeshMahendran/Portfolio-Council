@@ -87,7 +87,7 @@ export default function ProcessingPage() {
   const overallReady = status?.hasUserPlan && status?.hasRules;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col">
+    <div className="flex-1 brand-aura text-zinc-100 font-sans flex flex-col">
       <SiteHeader
         backHref="/"
         pageContext={
@@ -100,7 +100,7 @@ export default function ProcessingPage() {
         }
       />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-xl">
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-7 shadow-xl">
             <div className="flex items-center gap-3 mb-1">
@@ -109,8 +109,8 @@ export default function ProcessingPage() {
                   <Check className="w-5 h-5 text-emerald-400" />
                 </div>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                <div className="w-9 h-9 rounded-full bg-teal-600/20 border border-teal-500/40 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
                 </div>
               )}
               <h1 className="text-xl font-semibold">

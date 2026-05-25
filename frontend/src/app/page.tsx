@@ -16,8 +16,10 @@ import {
 import { toast } from "sonner";
 import GoalProgress from "@/components/GoalProgress";
 import SiteHeader from "@/components/SiteHeader";
+import { BrandMark } from "@/components/BrandMark";
 import { AgentSummaryGrid } from "@/components/visuals/AgentSummaryGrid";
 import { MilestoneTable } from "@/components/visuals/MilestoneTable";
+import { PrescriptionCard } from "@/components/visuals/PrescriptionCard";
 import { TodaysActionHero } from "@/components/visuals/TodaysActionHero";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -144,9 +146,9 @@ export default function Home() {
   // ─── Loading ───
   if (status === null) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+      <div className="flex-1 brand-aura text-zinc-100 flex flex-col">
         <SiteHeader />
-        <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-10 space-y-10">
+        <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-24" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -168,18 +170,22 @@ export default function Home() {
   // ─── New user — Welcome hero ───
   if (!onboarded) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+      <div className="flex-1 brand-aura text-zinc-100 flex flex-col">
         <SiteHeader />
 
-        <main className="flex-1 flex items-center justify-center px-6">
+        <main className="flex-1 flex items-center justify-center px-6 relative z-10">
           <div className="max-w-2xl text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-800/50 text-emerald-300 text-xs">
+            <div className="flex justify-center">
+              <BrandMark size={64} className="brand-ring rounded-2xl" />
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-400/20 text-teal-200 text-xs">
               <Sparkles className="w-3 h-3" />
               5-agent adversarial review
             </div>
 
             <h1 className="text-5xl font-semibold tracking-tight leading-tight">
-              Your AI investment board.
+              Your <span className="brand-text">AI investment board</span>.
             </h1>
 
             <p className="text-zinc-400 text-lg leading-relaxed max-w-xl mx-auto">
@@ -201,7 +207,7 @@ export default function Home() {
               </Button>
               <Link
                 href="/onboarding"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900 rounded-md text-base text-zinc-200 transition"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/25 hover:bg-white/[0.04] rounded-lg text-base text-zinc-200 transition"
               >
                 Start onboarding
                 <ArrowRight className="w-4 h-4" />
@@ -209,7 +215,7 @@ export default function Home() {
             </div>
 
             <div className="text-xs text-zinc-500 max-w-md mx-auto pt-2">
-              <span className="text-emerald-400">Try with sample data</span> seeds a generic plan + 10
+              <span className="text-teal-300">Try with sample data</span> seeds a generic plan + 10
               demo holdings so you can run a portfolio review in seconds without
               entering personal info.{" "}
               <Link
@@ -222,7 +228,7 @@ export default function Home() {
 
             <div className="text-xs text-zinc-600 flex items-center justify-center gap-4 pt-4">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
                 Self-hosted
               </span>
               <span>·</span>
@@ -232,30 +238,28 @@ export default function Home() {
             </div>
           </div>
         </main>
-
-        <SiteFooter />
       </div>
     );
   }
 
   // ─── Returning user — Dashboard ───
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+    <div className="flex-1 brand-aura text-zinc-100 flex flex-col">
       <SiteHeader />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-10 space-y-10">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
         {/* Holdings-pending banner — only for users who deferred upload, NOT
             for users whose portfolio is explicitly FD/cash-only (where the
             onboarding agent marked holdings as empty by design). */}
         {!status.hasHoldings && !holdingsAbsentByDesign && (
-          <div className="rounded-xl border border-amber-700/40 bg-amber-950/20 px-5 py-4">
+          <div className="rounded-xl border border-teal-500/25 bg-teal-500/[0.06] px-5 py-4">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-amber-200 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-teal-200 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   One step left — upload your holdings
                 </h3>
-                <p className="text-xs text-amber-100/70 mt-1 leading-relaxed max-w-xl">
+                <p className="text-xs text-zinc-400 mt-1 leading-relaxed max-w-xl">
                   Your plan and governance rules are saved. Before the Council
                   can run its first portfolio review, it needs to see what you
                   currently hold — upload a CSV from your broker, or seed
@@ -266,13 +270,10 @@ export default function Home() {
                 <Button variant="secondary" size="sm" onClick={onTryDemo} loading={seeding}>
                   Seed sample
                 </Button>
-                <Link
-                  href="/profile"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition"
-                >
+                <Button variant="primary" size="sm" onClick={() => router.push("/profile")}>
                   Upload holdings
                   <ArrowRight className="w-3 h-3" />
-                </Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -280,6 +281,9 @@ export default function Home() {
 
         {/* ── Today's action — the highest-priority signal ────────────── */}
         <TodaysActionHero />
+
+        {/* ── The investment prescription — where/how-much/how-long/when ── */}
+        <PrescriptionCard />
 
         {/* ── Goal at a glance ────────────────────────────────────────── */}
         <section>
@@ -330,29 +334,12 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <SiteFooter />
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────
 
-
-function SiteFooter() {
-  return (
-    <footer className="border-t border-zinc-900 px-6 py-3 text-xs text-zinc-600 flex items-center justify-between">
-      <span>Open source · MIT · Built with gitclaw</span>
-      <Link
-        href="/dev"
-        className="hover:text-zinc-400 transition flex items-center gap-1"
-      >
-        <GitBranch className="w-3 h-3" />
-        Developer view
-      </Link>
-    </footer>
-  );
-}
 
 function SecondaryLink({
   href,
@@ -366,10 +353,12 @@ function SecondaryLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-lg border border-zinc-800 hover:border-zinc-600 bg-zinc-900/30 hover:bg-zinc-900/60 px-3 py-2.5 text-sm text-zinc-300 hover:text-zinc-100 transition"
+      className="group flex items-center gap-3 rounded-xl border border-white/[0.06] hover:border-teal-500/40 bg-white/[0.02] hover:bg-teal-500/[0.04] px-3.5 py-3 text-sm text-zinc-300 hover:text-zinc-100 transition"
     >
-      <Icon className="w-4 h-4 text-zinc-500" />
-      <span>{label}</span>
+      <span className="w-8 h-8 rounded-lg inline-flex items-center justify-center border border-teal-400/20 bg-teal-500/10 text-teal-300 group-hover:bg-teal-500/20 transition shrink-0">
+        <Icon className="w-4 h-4" />
+      </span>
+      <span className="font-medium">{label}</span>
     </Link>
   );
 }

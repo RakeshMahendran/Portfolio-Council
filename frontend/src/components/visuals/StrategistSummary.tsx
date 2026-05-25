@@ -22,7 +22,7 @@ export function StrategistSummary({ s }: { s: StrategistParsed }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {s.trancheCount > 0 && (
           <StatChip
-            icon={<Layers className="w-4 h-4 text-blue-400" />}
+            icon={<Layers className="w-4 h-4 text-teal-400" />}
             value={s.trancheCount}
             label={s.trancheCount === 1 ? "phased tranche" : "phased tranches"}
           />

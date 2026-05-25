@@ -3,14 +3,17 @@
 import clsx from "clsx";
 import { formatInr, type AnalystComposition } from "@/lib/parse-artifacts";
 
+// Cohesive cool palette anchored on the violet/indigo brand, with cyan for
+// liquidity and amber reserved only for literal gold. Reads as one family,
+// not a rainbow.
 const COLOR: Record<AnalystComposition["kind"], string> = {
-  equity: "#3b82f6",   // blue
-  mf:     "#8b5cf6",   // violet
-  cash:   "#10b981",   // emerald
-  fd:     "#f59e0b",   // amber
-  gold:   "#eab308",   // yellow
-  bonds:  "#06b6d4",   // cyan
-  other:  "#71717a",   // zinc
+  equity: "#8b5cf6",   // violet-500 (brand center)
+  mf:     "#a78bfa",   // violet-400
+  cash:   "#22d3ee",   // cyan-400 — liquidity
+  fd:     "#6366f1",   // indigo-500
+  gold:   "#fbbf24",   // amber-400 — literal gold
+  bonds:  "#818cf8",   // indigo-400
+  other:  "#a1a1aa",   // zinc-400
 };
 
 /**
@@ -49,11 +52,21 @@ export function PortfolioDonut({
     return arc;
   });
 
+  const onlyFd =
+    items.length === 1 && items[0].kind === "fd" && items[0].pct >= 99;
+
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
       <h3 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
         Where your money is
       </h3>
+      {onlyFd && (
+        <p className="text-xs text-amber-300/80 mb-3 leading-relaxed">
+          You're starting from 100% Fixed Deposit. No equity, mutual-fund, or
+          debt-fund exposure yet — the Strategist will propose how to deploy
+          this corpus.
+        </p>
+      )}
       <div className="flex items-center gap-5">
         <svg width={180} height={180} viewBox="0 0 180 180" className="shrink-0">
           <circle

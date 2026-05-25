@@ -1,8 +1,10 @@
 # Portfolio Council
 
-> A 5-agent AI investment board you run as a git repo. Every decision is a commit. Every veto is enforced by a pre-commit hook. You fork an analyst the same way you fork a fork.
+> A 5-agent AI investment-research board you run as a git repo. Every decision is a commit. Every veto is enforced by a pre-commit hook. You fork an analyst the same way you fork a repo.
 
 Built on **[gitclaw](https://github.com/lyzr/gitclaw)** (Lyzr's GitAgent runtime) for the Lyzr AI hiring challenge: *"Build something with GitAgent that makes us go: okay… this person ships."*
+
+> ⚠️ **Not investment advice.** Portfolio Council is an open-source research / educational tool that simulates a multi-agent governance flow. It is **not** a SEBI-registered investment adviser or research analyst. Outputs are illustrations of how the Council reasons, not personalized recommendations. **Consult a SEBI RIA before making any actual investment decision.** Past performance ≠ future results. The author accepts no liability for outcomes from following any output.
 
 ---
 

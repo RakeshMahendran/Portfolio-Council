@@ -179,7 +179,7 @@ export function BrokerExportGuide({ open, onClose }: BrokerExportGuideProps) {
                       href={b.loginUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-3"
+                      className="inline-flex items-center gap-1 text-xs text-teal-400 hover:text-teal-300 mt-3"
                     >
                       Open {b.title.split(" ")[0]}
                       <ExternalLink className="w-3 h-3" />

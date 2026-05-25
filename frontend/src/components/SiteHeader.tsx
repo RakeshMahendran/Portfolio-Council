@@ -3,8 +3,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import AuthShell from "./AuthShell";
+import { BrandMark } from "./BrandMark";
 
 type Props = {
   /** When true (or unset), shows the full brand (logo + "Portfolio Council" + "powered by gitclaw"). */
@@ -22,13 +23,13 @@ export default function SiteHeader({
 }: Props = {}) {
   return (
     <header
-      className="border-b border-zinc-800/60 px-6 py-5 flex items-center justify-between sticky top-0 bg-zinc-950/95 backdrop-blur-sm z-40"
+      className="border-b border-white/[0.06] px-6 py-4 flex items-center justify-between sticky top-0 bg-[#08080c]/80 backdrop-blur-xl z-40"
     >
       <div className="flex items-center gap-4 min-w-0">
         {/* Brand cluster — either back arrow or full logo */}
         {backHref ? (
           <Link href={backHref} className="flex items-center gap-3 group shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-center transition-colors">
               <ArrowLeft className="w-4 h-4 text-zinc-300" />
             </div>
             <span className="text-lg font-semibold tracking-tight">
@@ -37,15 +38,15 @@ export default function SiteHeader({
           </Link>
         ) : (
           <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/30 group-hover:shadow-emerald-900/50 transition-shadow">
-              <Sparkles className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
+            <span className="group-hover:brand-ring rounded-xl transition-shadow">
+              <BrandMark size={38} />
+            </span>
             <div className="flex items-baseline gap-3">
               <span className="text-xl font-semibold tracking-tight">
                 Portfolio Council
               </span>
               {showFullBrand && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 font-mono border border-zinc-700/60 hidden md:inline">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] text-zinc-400 font-mono border border-white/10 hidden md:inline">
                   powered by gitclaw
                 </span>
               )}
@@ -56,7 +57,7 @@ export default function SiteHeader({
         {/* Optional page-context slot (breadcrumbs, status badges, etc.) */}
         {pageContext && (
           <>
-            <div className="h-5 w-px bg-zinc-800 hidden sm:block" />
+            <div className="h-5 w-px bg-white/10 hidden sm:block" />
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               {pageContext}
             </div>

@@ -8,11 +8,11 @@ type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-emerald-600 hover:bg-emerald-500 text-white border-transparent disabled:bg-zinc-800 disabled:text-zinc-500",
+    "brand-gradient text-white border-transparent shadow-lg shadow-teal-900/30 hover:shadow-teal-800/50 hover:brightness-110 disabled:bg-none disabled:bg-zinc-800 disabled:text-zinc-500 disabled:shadow-none",
   secondary:
-    "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700 disabled:opacity-50",
+    "bg-white/[0.06] hover:bg-white/[0.12] text-zinc-100 border-white/10 disabled:opacity-50",
   ghost:
-    "bg-transparent hover:bg-zinc-800/60 text-zinc-300 border-transparent disabled:opacity-50",
+    "bg-transparent hover:bg-white/[0.06] text-zinc-300 border-transparent disabled:opacity-50",
   danger:
     "bg-red-900/40 hover:bg-red-900/60 text-red-300 border-red-800/60 disabled:opacity-50",
 };
@@ -41,7 +41,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       className={clsx(
-        "inline-flex items-center gap-2 rounded-md border font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-600 disabled:cursor-not-allowed",
+        "inline-flex items-center gap-2 rounded-lg border font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/60 disabled:cursor-not-allowed",
         VARIANTS[variant],
         SIZES[size],
         className,

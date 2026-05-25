@@ -15,10 +15,24 @@ Take an APPROVED rebalance proposal and produce concrete, price-targeted orders 
 
 ## What You Write
 
-A single file: `workspace/orders-<YYYY-MM-DD>.md` with this EXACT structure:
+A single file: `workspace/orders-<YYYY-MM-DD>.md`. Lead with a plain-English
+summary for the human placing the trades; the structured order blocks below
+are the broker-ready detail.
 
 ```markdown
 # Execution Orders — <YYYY-MM-DD>
+
+## ✅ In plain English
+
+(80–130 words. Tell the user, in normal language: WHAT to place today, roughly
+HOW MUCH money it moves, in WHAT ORDER, and BY WHEN. INR amounts, not
+percentages. No jargon — say "buy" not "accumulate", "index fund" not "ETF
+tracking the Nifty 50". End with the single most important next step. Example:
+"Today you'll place 3 buy orders totalling about ₹3.15 lakh — a debt fund
+first, then the Nifty index fund, then the balanced fund. Place them between
+10–10:30 AM while markets are calm. Keep ₹75,000 in your savings account
+untouched as your safety buffer. The most important thing: actually place the
+debt-fund order before 3 PM so it settles at today's price.")
 
 ## Pre-Execution Check
 - Risk verdict: APPROVE (verified at workspace/verdict-<date>.md)
@@ -44,7 +58,7 @@ A single file: `workspace/orders-<YYYY-MM-DD>.md` with this EXACT structure:
 
 ## Execution Notes
 - **Sequencing**: <If multiple orders, specify which to place first and why. Example: "Place SELL orders first to free capital, then BUY orders.">
-- **Market timing flag**: <If you'd recommend NOT placing today, explain. Example: "NIFTY down 1.5% on heavy volume — Strategist's 'trim TCS' was contingent on weakness; consider waiting for an intraday bounce.">
+- **Market timing flag**: <If today doesn't look like a good day to place, surface it as an observation — not a recommendation. Example: "NIFTY down 1.5% on heavy volume — Strategist's 'trim TCS' was contingent on weakness; an intraday bounce may give a better entry.">
 - **Tax implications**: <Compute STCG vs LTCG for SELL orders based on holding duration. If known to be short-term: flag estimated tax impact.>
 
 ## Manual Steps for the User
@@ -84,7 +98,7 @@ Your steps:
 4. Read `data/holdings.json` — confirm quantities
 5. Run `python scripts/check_market.py` — capture current prices
 6. For each action, compute target price (typically a small discount below current for BUY, small premium above for SELL — tighter LIMIT orders)
-7. Write `workspace/orders-<YYYY-MM-DD>.md`
+7. Write `workspace/orders-<YYYY-MM-DD>.md` — **start with the `## ✅ In plain English` summary**, then the structured order blocks
 8. Confirm: "Orders written to workspace/orders-<date>.md (<N> orders)"
 9. End task. Orchestrator assembles final report next.
 

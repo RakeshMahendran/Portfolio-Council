@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BarChart3, Target, TrendingUp, type LucideIcon } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
@@ -39,8 +40,7 @@ type CanonicalAction = {
   label: string;
   prompt: string;
   description: string;
-  icon: string;
-  color: string;
+  Icon: LucideIcon;
 };
 
 const CANONICAL_ACTIONS: CanonicalAction[] = [
@@ -49,24 +49,21 @@ const CANONICAL_ACTIONS: CanonicalAction[] = [
     label: "Run portfolio review",
     prompt: "Run a complete portfolio review session for today.",
     description: "Full analysis → strategy → risk review → execution plan",
-    icon: "📊",
-    color: "emerald",
+    Icon: BarChart3,
   },
   {
     id: "goal",
     label: "Check goal progress",
-    prompt: "Check my progress toward the ₹40L goal by May 2027. Show projected vs required returns.",
+    prompt: "Check my progress toward my goal. Show projected vs required returns.",
     description: "Compare current trajectory with target milestone",
-    icon: "🎯",
-    color: "blue",
+    Icon: Target,
   },
   {
     id: "holdings",
     label: "Analyze holdings",
     prompt: "Analyze current holdings from data/holdings.json. Show concentration, P/L, and sector breakdown.",
     description: "Quick snapshot of portfolio health",
-    icon: "📈",
-    color: "amber",
+    Icon: TrendingUp,
   },
 ];
 
@@ -152,7 +149,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-mono text-sm">
+    <div className="flex-1 bg-zinc-950 text-zinc-100 font-mono text-sm">
       <SiteHeader
         backHref="/"
         pageContext={
@@ -190,7 +187,7 @@ export default function Dashboard() {
                     </span>
                   )}
                   {c.isGitclawAuthored && (
-                    <span className="text-xs px-1.5 rounded bg-blue-900/60 text-blue-300">
+                    <span className="text-xs px-1.5 rounded bg-teal-900/60 text-teal-300">
                       gitclaw
                     </span>
                   )}
@@ -243,16 +240,12 @@ export default function Dashboard() {
                         key={action.id}
                         onClick={() => runAction(action)}
                         disabled={running}
-                        className={`w-full text-left p-4 rounded-lg border transition ${
-                          action.color === "emerald"
-                            ? "bg-emerald-950/30 border-emerald-900/50 hover:bg-emerald-950/50 hover:border-emerald-800"
-                            : action.color === "blue"
-                            ? "bg-blue-950/30 border-blue-900/50 hover:bg-blue-950/50 hover:border-blue-800"
-                            : "bg-amber-950/30 border-amber-900/50 hover:bg-amber-950/50 hover:border-amber-800"
-                        } disabled:opacity-50 disabled:cursor-not-allowed group`}
+                        className="w-full text-left p-4 rounded-lg border transition bg-white/[0.03] border-white/10 hover:bg-teal-950/20 hover:border-teal-700/50 disabled:opacity-50 disabled:cursor-not-allowed group"
                       >
                         <div className="flex items-start gap-3">
-                          <span className="text-2xl shrink-0 mt-0.5">{action.icon}</span>
+                          <span className="w-9 h-9 rounded-lg shrink-0 inline-flex items-center justify-center border border-teal-400/20 bg-teal-500/10 text-teal-300">
+                            <action.Icon className="w-4.5 h-4.5" strokeWidth={2} />
+                          </span>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm text-zinc-100 group-hover:text-zinc-50">
                               {action.label}
@@ -382,14 +375,14 @@ function StreamEvent({ msg }: { msg: StreamMsg }) {
 
     case "task_end":
       return (
-        <div className="text-blue-400">
+        <div className="text-teal-400">
           {stripAnsi(msg.text)}
         </div>
       );
 
     case "system":
       return (
-        <div className="text-purple-400 italic">
+        <div className="text-teal-400 italic">
           {stripAnsi(msg.text)}
         </div>
       );

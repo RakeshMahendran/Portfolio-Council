@@ -125,7 +125,7 @@ export default function CredentialsSetupPage() {
   }, [allRequiredFilled, selected, fields, router]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col">
+    <div className="flex-1 brand-aura text-zinc-100 font-sans flex flex-col">
       <SiteHeader
         backHref="/"
         pageContext={
@@ -138,11 +138,11 @@ export default function CredentialsSetupPage() {
         }
       />
 
-      <main className="flex-1 px-4 py-10">
+      <main className="flex-1 px-4 py-7">
         <div className="max-w-3xl mx-auto">
           <header className="mb-6">
             <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-400" />
+              <Sparkles className="w-5 h-5 text-teal-400" />
               Connect a model
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
@@ -180,7 +180,7 @@ export default function CredentialsSetupPage() {
                           className={clsx(
                             "text-left rounded-lg border px-4 py-3 transition",
                             isSelected
-                              ? "border-blue-500/60 bg-blue-950/30"
+                              ? "border-teal-500/60 bg-teal-950/30"
                               : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-600",
                           )}
                         >
@@ -237,7 +237,7 @@ export default function CredentialsSetupPage() {
                         className={clsx(
                           "w-full rounded-lg px-3 py-2 text-sm font-mono",
                           "bg-zinc-950 border border-zinc-800",
-                          "focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-zinc-700",
+                          "focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-zinc-700",
                           "text-zinc-100 placeholder:text-zinc-600",
                         )}
                       />
@@ -257,7 +257,7 @@ export default function CredentialsSetupPage() {
                   className={clsx(
                     "rounded-xl border px-4 py-3 text-sm",
                     test.kind === "running" &&
-                      "border-blue-700/50 bg-blue-950/20 text-blue-200",
+                      "border-teal-700/50 bg-teal-950/20 text-teal-200",
                     test.kind === "success" &&
                       "border-emerald-700/50 bg-emerald-950/20 text-emerald-200",
                     test.kind === "failure" &&
@@ -320,7 +320,7 @@ export default function CredentialsSetupPage() {
                   onClick={handleSave}
                   className={clsx(
                     "rounded-lg px-4 py-2 text-sm font-medium transition",
-                    "bg-blue-600 text-white hover:bg-blue-500",
+                    "bg-teal-600 text-white hover:bg-teal-500",
                     "disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed",
                   )}
                 >

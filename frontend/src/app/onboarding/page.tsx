@@ -323,7 +323,7 @@ export default function OnboardingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans flex flex-col">
+    <div className="flex-1 brand-aura text-zinc-100 font-sans flex flex-col">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="shrink-0">
         <SiteHeader
@@ -342,7 +342,7 @@ export default function OnboardingPage() {
                 </span>
                 <div className="w-20 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                   <div
-                    className="h-full bg-blue-500 transition-all"
+                    className="h-full bg-teal-500 transition-all"
                     style={{
                       width: `${Math.min(
                         100,

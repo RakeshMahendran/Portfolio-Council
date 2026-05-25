@@ -36,7 +36,7 @@ export function RuleTrafficLights({ rules }: { rules: RuleCompliance[] }) {
           const ui = STATUS_UI[rule.status];
           return (
             <div
-              key={rule.number}
+              key={`${rule.kind}-${rule.number}`}
               className={clsx(
                 "flex items-center gap-2.5 rounded-lg border px-3 py-2 text-sm",
                 ui.bg,
@@ -46,7 +46,7 @@ export function RuleTrafficLights({ rules }: { rules: RuleCompliance[] }) {
               <div className={clsx("shrink-0", ui.color)}>{ui.icon}</div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-zinc-200 text-xs tracking-wide">
-                  Rule #{rule.number}
+                  {rule.kind} Rule #{rule.number}
                 </div>
                 <div
                   className={clsx("text-xs truncate", ui.label)}

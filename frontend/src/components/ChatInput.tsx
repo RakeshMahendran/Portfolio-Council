@@ -74,7 +74,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
       <div
         className={clsx(
           "flex items-end gap-2 rounded-xl border bg-zinc-900 px-3 py-2.5 transition",
-          "border-zinc-800 focus-within:border-zinc-600 focus-within:ring-2 focus-within:ring-blue-500/30",
+          "border-zinc-800 focus-within:border-zinc-600 focus-within:ring-2 focus-within:ring-teal-500/30",
           disabled && "opacity-60",
         )}
       >
@@ -99,7 +99,7 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           className={clsx(
             "shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition",
             canSend
-              ? "bg-blue-600 text-white hover:bg-blue-500"
+              ? "bg-teal-600 text-white hover:bg-teal-500"
               : "bg-zinc-800 text-zinc-500 cursor-not-allowed",
           )}
           aria-label="Send message"

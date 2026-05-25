@@ -223,14 +223,14 @@ function EventLine({ msg, accent }: { msg: StreamMsg; accent: AccentName }) {
     }
     case "task_end":
       return (
-        <div className="text-blue-300/90 truncate" title={stripAnsi(msg.text)}>
+        <div className="text-teal-300/90 truncate" title={stripAnsi(msg.text)}>
           {stripAnsi(msg.text)}
         </div>
       );
     case "system":
       return (
         <div
-          className="text-purple-300/80 italic truncate"
+          className="text-teal-300/80 italic truncate"
           title={stripAnsi(msg.text)}
         >
           {stripAnsi(msg.text)}

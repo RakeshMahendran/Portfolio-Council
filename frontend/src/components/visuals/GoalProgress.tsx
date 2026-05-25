@@ -47,7 +47,7 @@ export function GoalProgress({
         <div
           className={clsx(
             "h-full transition-all",
-            pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-blue-500" : "bg-zinc-500",
+            pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-teal-500" : "bg-zinc-500",
           )}
           style={{ width: `${pct}%` }}
         />

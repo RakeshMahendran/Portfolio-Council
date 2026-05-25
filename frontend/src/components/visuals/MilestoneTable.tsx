@@ -45,7 +45,7 @@ function MilestoneTableContent({
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-blue-400" />
+          <TrendingUp className="w-4 h-4 text-teal-400" />
           <h3 className="text-sm font-medium text-zinc-100">
             Your milestones — where you should be
           </h3>
@@ -92,14 +92,14 @@ function MilestoneTableContent({
               <tr
                 key={m.year}
                 className={clsx(
-                  m.kind === "now" && "bg-blue-950/20",
+                  m.kind === "now" && "bg-teal-950/20",
                   m.kind === "goal" && "bg-emerald-950/20",
                 )}
               >
                 <td className="px-3 py-2 align-top">
                   <div className="flex items-center gap-2">
                     {m.kind === "now" && (
-                      <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                      <MapPin className="w-3.5 h-3.5 text-teal-400" />
                     )}
                     {m.kind === "goal" && (
                       <Flag className="w-3.5 h-3.5 text-emerald-400" />
@@ -107,7 +107,7 @@ function MilestoneTableContent({
                     <span
                       className={clsx(
                         "font-medium tabular-nums",
-                        m.kind === "now" && "text-blue-300",
+                        m.kind === "now" && "text-teal-300",
                         m.kind === "goal" && "text-emerald-300",
                         m.kind === "milestone" && "text-zinc-200",
                       )}
@@ -126,7 +126,7 @@ function MilestoneTableContent({
                     className={clsx(
                       "font-semibold",
                       m.kind === "now"
-                        ? "text-blue-200"
+                        ? "text-teal-200"
                         : m.kind === "goal"
                           ? "text-emerald-200"
                           : "text-zinc-100",
@@ -152,7 +152,7 @@ function MilestoneTableContent({
                   <div className="flex items-center justify-end gap-1.5">
                     <div className="flex h-1.5 w-20 rounded-sm overflow-hidden bg-zinc-800">
                       <div
-                        className="bg-blue-500"
+                        className="bg-teal-500"
                         style={{ width: `${m.equityPct}%` }}
                         title={`${m.equityPct}% equity`}
                       />
@@ -235,7 +235,7 @@ function MilestoneDot({
         className={clsx(
           "rounded-full border-2 z-10 mb-1",
           isNow
-            ? "w-3.5 h-3.5 bg-blue-500 border-blue-300 shadow-lg shadow-blue-500/50"
+            ? "w-3.5 h-3.5 bg-teal-500 border-teal-300 shadow-lg shadow-teal-500/50"
             : isGoal
               ? "w-3.5 h-3.5 bg-emerald-500 border-emerald-300 shadow-lg shadow-emerald-500/50"
               : isGoalMet

@@ -99,7 +99,7 @@ function ExpenseCard({
           download="portfolio-council-expense-template.csv"
           className={clsx(
             "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition",
-            "bg-blue-600 text-white hover:bg-blue-500",
+            "bg-teal-600 text-white hover:bg-teal-500",
             disabled && "opacity-50 pointer-events-none",
           )}
         >

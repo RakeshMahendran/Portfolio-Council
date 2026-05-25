@@ -242,7 +242,7 @@ function SessionPageInner() {
   const sessionVetoed = verdict === "VETO";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="flex-1 brand-aura text-zinc-100">
       <SiteHeader
         backHref="/"
         pageContext={
@@ -610,8 +610,8 @@ function RawEvent({ msg }: { msg: StreamMsg }) {
   if (t === "session_end")
     return <div className="text-emerald-500">✓ session end</div>;
   if (t === "tool_use") return <div className="text-amber-400">{text}</div>;
-  if (t === "task_end") return <div className="text-blue-400">{text}</div>;
-  if (t === "system") return <div className="text-purple-400 italic">{text}</div>;
+  if (t === "task_end") return <div className="text-teal-400">{text}</div>;
+  if (t === "system") return <div className="text-teal-400 italic">{text}</div>;
   if (t === "error" || t === "error_line")
     return (
       <div className="text-red-400">

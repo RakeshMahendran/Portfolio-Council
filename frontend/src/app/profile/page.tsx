@@ -182,9 +182,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="flex-1 brand-aura text-zinc-100">
         <SiteHeader backHref="/" />
-        <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+        <main className="max-w-5xl mx-auto px-6 py-7 space-y-6">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-24" />
           <Skeleton className="h-48" />
@@ -195,10 +195,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="flex-1 brand-aura text-zinc-100">
       <SiteHeader backHref="/" />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-7 space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />

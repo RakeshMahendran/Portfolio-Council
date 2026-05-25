@@ -71,7 +71,7 @@ export function ChatMessage({
           className={clsx(
             "rounded-xl border px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap",
             isUser
-              ? "bg-blue-600/20 border-blue-500/40 text-blue-50"
+              ? "bg-teal-600/20 border-teal-500/40 text-teal-50"
               : "bg-zinc-800 border-zinc-700 text-zinc-100",
           )}
         >

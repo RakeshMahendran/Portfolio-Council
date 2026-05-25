@@ -17,44 +17,17 @@ import MarkdownView from "@/components/MarkdownView";
 import SiteHeader from "@/components/SiteHeader";
 import { AgentVisuals } from "@/components/visuals/AgentVisuals";
 import {
+  AgentIcon,
+  AGENT_META,
+  AGENT_ORDER,
+  type AgentKey,
+} from "@/components/AgentIcon";
+import {
   getLatestSession,
   getUserPlan,
   getWorkspaceFile,
   type SessionData,
 } from "@/lib/api";
-
-// ─── Agent catalog ────────────────────────────────────────────────────────
-
-const AGENT_META = {
-  analyst: {
-    name: "Analyst",
-    icon: "📊",
-    description: "Observes facts. Never recommends.",
-    artifactPrefix: "analysis",
-  },
-  strategist: {
-    name: "Strategist",
-    icon: "💡",
-    description: "Proposes rebalance actions. Cites RULES.",
-    artifactPrefix: "proposal",
-  },
-  risk: {
-    name: "Risk Officer",
-    icon: "🛑",
-    description: "Adversarial review. APPROVE / VETO / AMEND.",
-    artifactPrefix: "verdict",
-  },
-  execution: {
-    name: "Execution",
-    icon: "✅",
-    description: "Translates approved strategy to price-targeted orders.",
-    artifactPrefix: "orders",
-  },
-} as const;
-
-type AgentKey = keyof typeof AGENT_META;
-
-const AGENT_ORDER: AgentKey[] = ["analyst", "strategist", "risk", "execution"];
 
 export default function AgentDetailPage() {
   return (
@@ -134,7 +107,7 @@ function AgentDetailInner() {
 
   if (!meta) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
+      <div className="flex-1 brand-aura text-zinc-100 flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl mb-2">Unknown agent: {agentParam}</div>
           <Link
@@ -149,12 +122,13 @@ function AgentDetailInner() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="flex-1 brand-aura text-zinc-100">
       <SiteHeader
         backHref="/session"
         pageContext={
-          <span className="text-sm text-zinc-400">
-            {meta.icon} {meta.name}
+          <span className="flex items-center gap-2 text-sm text-zinc-300">
+            <AgentIcon agent={agent} size="sm" />
+            {meta.name}
           </span>
         }
       />
@@ -284,9 +258,7 @@ function AgentNav({
                   : "bg-zinc-950/40 border-zinc-900 text-zinc-500 hover:border-zinc-700",
             )}
           >
-            <span className="text-base leading-none shrink-0" aria-hidden>
-              {meta.icon}
-            </span>
+            <AgentIcon agent={key} size="sm" className="shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="font-medium leading-tight">{meta.name}</div>
               <div

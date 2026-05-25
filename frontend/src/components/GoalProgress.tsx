@@ -72,24 +72,20 @@ function statusFor(percentDone: number, percentElapsed: number): Status {
   return "at_risk";
 }
 
-const STATUS_META: Record<
-  Status,
-  { label: string; pill: string; bar: string }
-> = {
+// The progress bar always uses the brand gradient (it's the signature hero
+// element); pace is communicated by the semantic status pill instead.
+const STATUS_META: Record<Status, { label: string; pill: string }> = {
   on_track: {
     label: "ON TRACK",
     pill: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
-    bar: "bg-gradient-to-r from-emerald-500 to-emerald-400",
   },
   behind: {
     label: "BEHIND",
     pill: "bg-amber-500/15 text-amber-300 border-amber-500/40",
-    bar: "bg-gradient-to-r from-amber-500 to-amber-400",
   },
   at_risk: {
     label: "AT RISK",
     pill: "bg-red-500/15 text-red-300 border-red-500/40",
-    bar: "bg-gradient-to-r from-red-500 to-red-400",
   },
 };
 
@@ -184,7 +180,7 @@ export default function GoalProgress({
         aria-valuenow={Math.round(percentDone)}
       >
         <div
-          className={clsx("h-full rounded-full transition-all", meta.bar)}
+          className="h-full rounded-full transition-all brand-gradient"
           style={{ width: `${percentDone}%` }}
         />
       </div>

@@ -107,11 +107,11 @@ export function TodaysActionHero() {
   // No session yet → CTA to run one.
   if (!loading && !action) {
     return (
-      <section className="rounded-2xl border border-zinc-700/60 bg-gradient-to-br from-blue-950/30 to-zinc-900/40 p-6">
+      <section className="rounded-2xl border border-zinc-700/60 bg-gradient-to-br from-teal-950/30 to-zinc-900/40 p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-400" />
+              <Sparkles className="w-5 h-5 text-teal-400" />
               Ready for your first portfolio review
             </h2>
             <p className="text-sm text-zinc-400 mt-1 max-w-xl leading-relaxed">
@@ -124,8 +124,8 @@ export function TodaysActionHero() {
             href="/session?prompt=Run+a+complete+portfolio+review+session+for+today."
             className={clsx(
               "shrink-0 inline-flex items-center gap-2 rounded-lg px-5 py-2.5",
-              "bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium",
-              "shadow-lg shadow-blue-900/30 transition",
+              "bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium",
+              "shadow-lg shadow-teal-900/30 transition",
             )}
           >
             <Play className="w-4 h-4" />
@@ -149,7 +149,7 @@ export function TodaysActionHero() {
           ? "border-emerald-700/50 bg-gradient-to-br from-emerald-950/30 to-zinc-900/40"
           : isBlocked
             ? "border-amber-700/50 bg-gradient-to-br from-amber-950/30 to-zinc-900/40"
-            : "border-zinc-700/60 bg-gradient-to-br from-blue-950/30 to-zinc-900/40",
+            : "border-zinc-700/60 bg-gradient-to-br from-teal-950/30 to-zinc-900/40",
       )}
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">

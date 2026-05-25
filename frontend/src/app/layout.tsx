@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { DisclaimerFooter } from "@/components/DisclaimerFooter";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio Council — your AI investment board",
+  title: "Portfolio Council — multi-agent investment research",
   description:
-    "A 5-agent adversarial review framework built on gitclaw. Agents argue every portfolio decision; the deliberation is committed to git as an immutable audit trail.",
+    "A 5-agent adversarial research framework built on gitclaw. Agents argue every portfolio decision; the deliberation is committed to git as an immutable audit trail. Not investment advice.",
 };
 
 export default function RootLayout({
@@ -31,6 +32,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <DisclaimerFooter />
         <Toaster
           theme="dark"
           position="bottom-right"

@@ -72,7 +72,7 @@ export function ActivityFAB({ activities, running }: ActivityFABProps) {
           <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800">
             <div className="flex items-center gap-2">
               {running ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-teal-400" />
               ) : (
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
               )}
@@ -122,7 +122,7 @@ export function ActivityFAB({ activities, running }: ActivityFABProps) {
           "group inline-flex items-center gap-2 rounded-full pl-3 pr-3.5 py-2",
           "shadow-lg shadow-black/40 transition",
           running
-            ? "bg-blue-600 text-white hover:bg-blue-500"
+            ? "bg-teal-600 text-white hover:bg-teal-500"
             : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 border border-zinc-700",
         )}
         aria-label="Show agent activity"

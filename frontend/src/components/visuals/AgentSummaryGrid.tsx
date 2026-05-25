@@ -22,17 +22,7 @@ import {
   parseRisk,
   parseStrategist,
 } from "@/lib/parse-artifacts";
-
-type AgentKey = "analyst" | "strategist" | "risk" | "execution";
-
-const AGENT_META: Record<AgentKey, { name: string; icon: string }> = {
-  analyst:    { name: "Analyst",       icon: "📊" },
-  strategist: { name: "Strategist",    icon: "💡" },
-  risk:       { name: "Risk Officer",  icon: "🛑" },
-  execution:  { name: "Execution",     icon: "✅" },
-};
-
-const AGENT_ORDER: AgentKey[] = ["analyst", "strategist", "risk", "execution"];
+import { AgentIcon, AGENT_META, AGENT_ORDER, type AgentKey } from "@/components/AgentIcon";
 
 /**
  * The Council's latest verdict at a glance — 4 compact cards, one per agent.
@@ -124,10 +114,8 @@ export function AgentSummaryGrid() {
               )}
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none" aria-hidden>
-                    {meta.icon}
-                  </span>
+                <div className="flex items-center gap-2.5">
+                  <AgentIcon agent={key} size="sm" />
                   <span className="text-sm font-medium text-zinc-200">
                     {meta.name}
                   </span>
@@ -154,7 +142,7 @@ export function AgentSummaryGrid() {
                 className={clsx(
                   "text-[11px] flex items-center gap-1 mt-1",
                   hasArtifact
-                    ? "text-blue-400 group-hover:text-blue-300"
+                    ? "text-teal-400 group-hover:text-teal-300"
                     : "text-zinc-600",
                 )}
               >
