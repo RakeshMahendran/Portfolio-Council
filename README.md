@@ -65,18 +65,47 @@ That's why **gitclaw is load-bearing** here, not decoration. Strip gitclaw and y
 
 ## Quickstart
 
+**Prerequisites:** Docker + Docker Compose, `git`, and **one** LLM provider key (Anthropic, OpenAI, AWS Bedrock, or Azure — any one).
+
 ```bash
-git clone <this-repo>
-cd portfolio-agent
-./scripts/setup.sh                         # installs the pre-commit hook
-cp .env.example .env                       # fill in AWS_BEARER_TOKEN_BEDROCK
-docker compose up                          # ~90s first boot
-open http://localhost:3000
+# 1 — Clone and install the git governance hook
+git clone https://github.com/RakeshMahendran/Portfolio-Council.git
+cd Portfolio-Council
+./scripts/setup.sh
+
+# 2 — Create your env file (keys can stay blank — you'll set them in-app)
+cp .env.example .env
+
+# 3 — Launch (first build ~60–120s)
+docker compose up
+
+# 4 — Open the app
+#     frontend → http://localhost:3000
+#     backend  → http://localhost:8000
 ```
 
-Click **"Try with sample data"** on the landing page → onboarding chat opens with a demo persona pre-loaded. You'll have a finished plan + RULES.md + holdings file inside 60 seconds without typing anything personal. Then click **"Run portfolio review"** to watch the four-agent debate stream into the dashboard.
+**First run, in the browser:**
 
-> **Bedrock access**: get an `AWS_BEARER_TOKEN_BEDROCK` from the AWS console (or Lyzr Studio's hosted access). The default model is `amazon-bedrock:us.anthropic.claude-sonnet-4-5-20250929-v1:0`. There's an Azure OpenAI fallback in `.env.example` if Bedrock is unavailable.
+1. The app opens **"Connect a model"** → paste a key for any provider → **Test** → **Save** (it writes `.env` for you).
+2. Click **"Try with sample data"** → seeds a demo plan + `RULES.md` + holdings in ~60s.
+3. Click **"Run portfolio review"** → watch the five-agent flow stream in (~12–25 min on Bedrock).
+
+**Manage the containers:**
+
+```bash
+docker compose logs -f        # follow logs
+docker compose down           # stop
+docker compose up --build     # rebuild after dependency changes
+```
+
+**Run without Docker (dev mode):**
+
+```bash
+cd server && pip install -r requirements.txt && uvicorn main:app --port 8000 --reload
+cd frontend && npm install && npm run dev      # separate terminal
+```
+
+> Both ports bind to `127.0.0.1` only (there's no auth on `/api/run`). Your goals and holdings stay in your clone — `memory/`, `data/`, `workspace/`, `reports/` are gitignored.
 
 ---
 
