@@ -81,11 +81,14 @@ export type AnalystParsed = {
 };
 
 const COMPOSITION_PATTERNS: { label: string; kind: AnalystComposition["kind"]; regex: RegExp }[] = [
-  // "Equity portfolio: ₹10,58,195" / "Equity: ₹X" — the holdings block.
-  { label: "Equity", kind: "equity", regex: /(?:^|\n)\s*-?\s*Equity(?:\s*portfolio)?:\s*₹?\s*([\d,]+)/i },
+  // "Equity portfolio: ₹10,58,195" / "Equity Subtotal: ₹X" / "Equity: ₹X" —
+  // the holdings block. `[*\s]*` tolerates the markdown-bold wrap agents emit
+  // (`**Equity Subtotal:** ₹8,86,788`).
+  { label: "Equity", kind: "equity", regex: /(?:^|\n)[*\s]*-?[*\s]*Equity(?:\s*(?:portfolio|subtotal|holdings))?[*\s]*:[*\s]*₹?\s*([\d,]+)/i },
   { label: "Stocks", kind: "equity", regex: /(?:^|\n)\s*-?\s*Stocks?:\s*₹?\s*([\d,]+)/i },
   { label: "Mutual Funds", kind: "mf", regex: /(?:^|\n)\s*-?\s*Mutual\s*Funds?:\s*₹?\s*([\d,]+)/i },
-  { label: "Cash", kind: "cash", regex: /(?:^|\n)\s*-?\s*Cash(?:\/Savings|\/Other)?:\s*₹?\s*([\d,]+)/i },
+  // "Cash: ₹X" / "Cash/Savings: ₹X" / "Cash / Savings: ₹X" (spaces around the slash).
+  { label: "Cash", kind: "cash", regex: /(?:^|\n)\s*-?\s*Cash(?:\s*\/\s*(?:Savings|Other))?:\s*₹?\s*([\d,]+)/i },
   { label: "Fixed Deposit", kind: "fd", regex: /(?:^|\n)\s*-?\s*Fixed\s*Deposit(?:s)?:\s*₹?\s*([\d,]+)/i },
   // Anchor Gold to ₹ specifically — otherwise "Gold: $4,523" from the
   // global-markets section gets misread as ₹4,523. Allow a parenthetical
