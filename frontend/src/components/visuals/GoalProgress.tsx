@@ -59,7 +59,10 @@ export function GoalProgress({
           {plan.goalDate ?? "—"}
           {plan.horizonYears != null && (
             <span className="text-zinc-600 ml-1.5">
-              ({plan.horizonYears} years out)
+              ({plan.horizonYears < 2
+                ? `${Math.round(plan.horizonYears * 12)} months`
+                : `${plan.horizonYears.toFixed(plan.horizonYears % 1 === 0 ? 0 : 1)} years`}{" "}
+              out)
             </span>
           )}
         </span>

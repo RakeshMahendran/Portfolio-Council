@@ -5,7 +5,6 @@ import {
   parseAnalyst,
   parseConfidenceRationale,
   parseExecution,
-  parseMathCheck,
   parsePlainEnglish,
   parseRisk,
   parseStrategist,
@@ -18,7 +17,6 @@ import { ConfidenceRationale } from "./ConfidenceRationale";
 import { ExecutionSummary } from "./ExecutionSummary";
 import { GoalProgress } from "./GoalProgress";
 import { LiquidityGauge } from "./LiquidityGauge";
-import { MathCheckCard } from "./MathCheckCard";
 import { PlainEnglishCallout } from "./PlainEnglishCallout";
 import { PlanBCard } from "./PlanBCard";
 import { PortfolioDonut } from "./PortfolioDonut";
@@ -79,16 +77,14 @@ export function AgentVisuals({
     const targetAlloc = parseTargetAllocation(content);
     const stress = parseStressTests(content);
     const amendments = parseAmendments(content);
-    const math = parseMathCheck(content);
+    // Goal-math (required savings / return) lives on the home "Roadmap" card,
+    // which is the single source of truth — no duplicate Math card here.
     return (
       <div className="space-y-4">
         <PlainEnglishCallout agent={agent} summary={plain} />
         <StrategistSummary s={s} />
         {targetAlloc.length > 0 && (
           <TargetAllocationDonut positions={targetAlloc} />
-        )}
-        {math && (
-          <MathCheckCard math={math} />
         )}
         {amendments.length > 0 && (
           <AmendmentsCard amendments={amendments} />

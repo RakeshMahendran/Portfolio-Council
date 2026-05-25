@@ -300,6 +300,7 @@ export default function Home() {
             targetAmount={goal?.target}
             currentValue={goal?.current}
             targetDate={goal?.date ?? "—"}
+            planText={planRaw}
             loading={!goal || Object.keys(goal).length === 0}
           />
         </section>

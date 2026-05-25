@@ -1,12 +1,15 @@
 "use client";
 
 import clsx from "clsx";
+import { projectFromUserPlan } from "@/lib/milestones";
 
 type GoalProgressProps = {
   targetAmount?: number;
   currentValue?: number;
   /** Human-friendly target date label, e.g. "May 2027". */
   targetDate?: string;
+  /** Raw user_plan.md — enables a contribution-aware on-track status. */
+  planText?: string | null;
   loading?: boolean;
 };
 
@@ -93,6 +96,7 @@ export default function GoalProgress({
   targetAmount,
   currentValue,
   targetDate,
+  planText,
   loading,
 }: GoalProgressProps) {
   const hasData =
@@ -133,8 +137,15 @@ export default function GoalProgress({
   // For status, we need an "elapsed" notion. Without a known start date we
   // approximate using a 36-month default glide path centered on the target.
   // If monthsLeft is unknown, default to on_track.
+  // Prefer a contribution-aware projection (same engine as the Milestones
+  // card) so this badge can't contradict it. Fall back to the %-elapsed
+  // heuristic only when we have no plan text to project from.
   let status: Status = "on_track";
-  if (monthsLeft !== null) {
+  const proj = planText ? projectFromUserPlan(planText) : null;
+  if (proj && proj.goalAmount > 0) {
+    const coverage = (proj.projectedFinal / proj.goalAmount) * 100;
+    status = coverage >= 100 ? "on_track" : coverage >= 85 ? "behind" : "at_risk";
+  } else if (monthsLeft !== null) {
     const totalMonthsAssumed = 36;
     const elapsed = Math.max(0, totalMonthsAssumed - monthsLeft);
     const percentElapsed =

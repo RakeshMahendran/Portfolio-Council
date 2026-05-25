@@ -1,10 +1,10 @@
 /**
  * Milestone projections — pure client-side math so the dashboard can show
- * "where you should be in N years" without waiting on the Strategist.
+ * "what must I save, and where will I be" without waiting on the Strategist.
  *
- * The Strategist's actual proposal is the source of truth for THIS month's
- * action; these projections are just the long-horizon scaffold to show
- * the user the journey, not the next-90-days tactical plan.
+ * Month-based so it works for BOTH a 13-month house goal and a 30-year
+ * retirement. The Strategist's proposal is the source of truth for THIS
+ * month's action; these projections are the trajectory scaffold.
  */
 
 import { parseUserPlan, type UserPlanParsed } from "./parse-artifacts";
@@ -13,33 +13,17 @@ export type RiskTolerance = "low" | "medium" | "high" | "unknown";
 
 /**
  * Conservative-ish blended-return assumptions for Indian retail investors.
- * These are NOT promises — they're the kind of "rule-of-thumb" numbers a
- * planner uses to draw a glide path. Real returns vary.
+ * NOT promises — rule-of-thumb numbers a planner uses to draw a glide path.
  */
 export const ASSUMED_RETURN: Record<Exclude<RiskTolerance, "unknown">, number> = {
-  low: 8,    // 50% equity / 50% debt blend
-  medium: 10, // 70% equity / 30% debt blend
-  high: 12,   // 90% equity / 10% debt blend
+  low: 8,
+  medium: 10,
+  high: 12,
 };
 
-/** Equity glide-path target at each year — start aggressive, de-risk toward goal. */
-export function equityAllocationPct(
-  yearsFromNow: number,
-  yearsToGoal: number,
-  risk: RiskTolerance,
-): number {
-  // Risk-aware peak equity allocation.
-  const peakEquity = { low: 50, medium: 70, high: 85, unknown: 60 }[risk];
-  // De-risk in the final 30% of the journey (or last 3 years, whichever is more)
-  const deriskWindow = Math.max(3, yearsToGoal * 0.3);
-  const yearsToGoalFromNow = Math.max(0, yearsToGoal - yearsFromNow);
-  if (yearsToGoalFromNow >= deriskWindow) return peakEquity;
-  // Linear de-risk from peak down to 20% by goal year
-  const t = 1 - yearsToGoalFromNow / deriskWindow;
-  return Math.round(peakEquity - t * (peakEquity - 20));
-}
-
-export function parseRiskTolerance(planText: string | undefined | null): RiskTolerance {
+export function parseRiskTolerance(
+  planText: string | undefined | null,
+): RiskTolerance {
   if (!planText) return "unknown";
   const m = planText.match(/Tolerance:\s*([^\n]+)/i);
   if (!m) return "unknown";
@@ -51,126 +35,242 @@ export function parseRiskTolerance(planText: string | undefined | null): RiskTol
 }
 
 export type Milestone = {
-  year: number;            // calendar year (e.g. 2027)
-  yearsFromNow: number;    // 0 = this year
+  label: string; // "Now", "Aug 2026", "Jun 2027"
+  monthsFromNow: number;
   projectedCorpus: number;
   equityPct: number;
   debtPct: number;
-  /** "milestone" / "goal" / "now" — for rendering emphasis */
   kind: "now" | "milestone" | "goal";
 };
 
+export type MilestoneProjection = {
+  plan: UserPlanParsed;
+  risk: RiskTolerance;
+  assumedReturn: number; // % annual
+  monthsToGoal: number;
+  milestones: Milestone[];
+  projectedFinal: number; // corpus at goal date, at the planned pace
+  plannedMonthly: number;
+  requiredMonthly: number; // monthly contribution needed to exactly hit goal
+  requiredReturn: number | null; // annual % the corpus must earn (0 = none needed, null = unreachable)
+  goalAmount: number;
+  onTrack: boolean;
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function monthLabel(d: Date): string {
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** Months from today until a target date string ("June 2027" / "2027-06" / "2055"). */
+export function monthsUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  let target: Date | null = null;
+
+  const iso = dateStr.match(/(\d{4})-(\d{1,2})/); // 2027-06
+  const monthName = dateStr.match(
+    /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/i,
+  );
+  const yearOnly = dateStr.match(/\b(20\d{2})\b/);
+
+  if (iso) {
+    target = new Date(Number(iso[1]), Number(iso[2]) - 1, 1);
+  } else if (monthName) {
+    const idx = MONTHS.findIndex(
+      (m) => m.toLowerCase() === monthName[1].slice(0, 3).toLowerCase(),
+    );
+    target = new Date(Number(monthName[2]), idx, 1);
+  } else if (yearOnly) {
+    target = new Date(Number(yearOnly[1]), 11, 31); // year-end
+  }
+  if (!target) return null;
+
+  const now = new Date();
+  const months =
+    (target.getFullYear() - now.getFullYear()) * 12 +
+    (target.getMonth() - now.getMonth());
+  return Math.max(1, months);
+}
+
+/** Equity glide-path %: hold peak, then de-risk over the final stretch toward goal. */
+function equityPctAtMonth(
+  monthsFromNow: number,
+  monthsToGoal: number,
+  risk: RiskTolerance,
+): number {
+  const peak = { low: 50, medium: 70, high: 85, unknown: 60 }[risk];
+  const deriskWindow = Math.max(6, monthsToGoal * 0.3); // last 30% or 6 months
+  const remaining = Math.max(0, monthsToGoal - monthsFromNow);
+  if (remaining >= deriskWindow) return peak;
+  const t = 1 - remaining / deriskWindow;
+  return Math.round(peak - t * (peak - 15)); // glide down to ~15% by goal
+}
+
+/** Pick up to ~4–6 evenly spaced month offsets, always including the goal month. */
+function pickMonthOffsets(months: number): number[] {
+  if (months <= 1) return [months];
+  const n = months <= 24 ? 4 : 6;
+  const pts = new Set<number>();
+  for (let i = 1; i <= n; i++) pts.add(Math.round((months * i) / n));
+  pts.add(months);
+  return [...pts].filter((x) => x >= 1).sort((a, b) => a - b);
+}
+
+/** Monthly contribution needed so current corpus + annuity compounds to goal. */
+function requiredMonthlyContribution(
+  goal: number,
+  current: number,
+  months: number,
+  monthlyReturn: number,
+): number {
+  const growth = Math.pow(1 + monthlyReturn, months);
+  const fvCurrent = current * growth;
+  const annuityFactor = monthlyReturn === 0 ? months : (growth - 1) / monthlyReturn;
+  if (annuityFactor <= 0) return 0;
+  return Math.max(0, (goal - fvCurrent) / annuityFactor);
+}
+
+/** Future value of current corpus + monthly contributions at a given annual %. */
+function futureValueAt(
+  annualPct: number,
+  current: number,
+  monthly: number,
+  months: number,
+): number {
+  const m = annualPct / 100 / 12;
+  const g = Math.pow(1 + m, months);
+  const annuity = m === 0 ? months : (g - 1) / m;
+  return current * g + monthly * annuity;
+}
+
 /**
- * Project corpus over time using compound interest on the current corpus
- * plus monthly contributions. Year-end snapshots, not daily.
+ * The annual return RATE the plan actually needs: solve for r such that
+ * current + monthly contributions compound to exactly the goal. This is the
+ * honest "what % must my money earn?" number — compare it to what's realistic.
+ *   - returns 0 if contributions alone already reach the goal (no growth needed)
+ *   - returns null if even a very high return can't get there (need more savings/time)
  */
-export function projectMilestones({
+function requiredAnnualReturn(
+  goal: number,
+  current: number,
+  monthly: number,
+  months: number,
+): number | null {
+  if (futureValueAt(0, current, monthly, months) >= goal) return 0;
+  let lo = 0;
+  let hi = 60; // 60%/yr ceiling — beyond this the goal is effectively unreachable
+  if (futureValueAt(hi, current, monthly, months) < goal) return null;
+  for (let i = 0; i < 64; i++) {
+    const mid = (lo + hi) / 2;
+    if (futureValueAt(mid, current, monthly, months) < goal) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function projectMilestones({
   startingCorpus,
   monthlyContribution,
-  yearsToGoal,
+  monthsToGoal,
   risk,
-  goalAmount,
 }: {
   startingCorpus: number;
   monthlyContribution: number;
-  yearsToGoal: number;
+  monthsToGoal: number;
   risk: RiskTolerance;
-  goalAmount: number | null;
 }): Milestone[] {
   const annualReturn = risk === "unknown" ? 9 : ASSUMED_RETURN[risk];
   const monthlyReturn = annualReturn / 100 / 12;
-  const thisYear = new Date().getFullYear();
+  const now = new Date();
+  const offsets = pickMonthOffsets(monthsToGoal);
 
-  // Determine which year-offsets to surface — adapt to horizon length.
-  const offsets = pickMilestoneOffsets(yearsToGoal);
+  const milestones: Milestone[] = [
+    {
+      label: "Now",
+      monthsFromNow: 0,
+      projectedCorpus: startingCorpus,
+      equityPct: equityPctAtMonth(0, monthsToGoal, risk),
+      debtPct: 100 - equityPctAtMonth(0, monthsToGoal, risk),
+      kind: "now",
+    },
+  ];
 
-  const milestones: Milestone[] = [];
   let corpus = startingCorpus;
-
-  // Always include "now" at offset 0
-  milestones.push({
-    year: thisYear,
-    yearsFromNow: 0,
-    projectedCorpus: startingCorpus,
-    equityPct: equityAllocationPct(0, yearsToGoal, risk),
-    debtPct: 100 - equityAllocationPct(0, yearsToGoal, risk),
-    kind: "now",
-  });
-
-  for (let y = 1; y <= yearsToGoal; y++) {
-    for (let m = 0; m < 12; m++) {
-      corpus = corpus * (1 + monthlyReturn) + monthlyContribution;
-    }
-    if (offsets.includes(y)) {
+  for (let mo = 1; mo <= monthsToGoal; mo++) {
+    corpus = corpus * (1 + monthlyReturn) + monthlyContribution;
+    if (offsets.includes(mo)) {
+      const d = new Date(now.getFullYear(), now.getMonth() + mo, 1);
+      const eq = equityPctAtMonth(mo, monthsToGoal, risk);
       milestones.push({
-        year: thisYear + y,
-        yearsFromNow: y,
+        label: monthLabel(d),
+        monthsFromNow: mo,
         projectedCorpus: corpus,
-        equityPct: equityAllocationPct(y, yearsToGoal, risk),
-        debtPct: 100 - equityAllocationPct(y, yearsToGoal, risk),
-        kind: y === yearsToGoal ? "goal" : "milestone",
+        equityPct: eq,
+        debtPct: 100 - eq,
+        kind: mo === monthsToGoal ? "goal" : "milestone",
       });
     }
   }
-
-  // Annotate "goal met" — if projected corpus passes goalAmount before the
-  // user's stated goal year, the path is comfortably on track.
-  if (goalAmount !== null) {
-    for (const m of milestones) {
-      if (m.kind !== "now" && m.projectedCorpus >= goalAmount && m.kind !== "goal") {
-        // No flag for now; the UI can derive this comparatively.
-      }
-    }
-  }
-
   return milestones;
 }
 
-function pickMilestoneOffsets(yearsToGoal: number): number[] {
-  // Short horizon (≤ 3 yrs): every year
-  if (yearsToGoal <= 3) return Array.from({ length: yearsToGoal }, (_, i) => i + 1);
-  // Medium horizon (4-7 yrs): every year for first 3, then goal year
-  if (yearsToGoal <= 7) return [1, 2, 3, yearsToGoal].filter((v, i, a) => a.indexOf(v) === i);
-  // Longer horizon: 1, 3, 5, 10, then goal
-  if (yearsToGoal <= 15)
-    return [1, 3, 5, 10, yearsToGoal].filter((v, i, a) => v <= yearsToGoal && a.indexOf(v) === i);
-  // Very long horizon (retirement): 1, 5, 10, 20, half-way, then goal
-  return [
-    1,
-    5,
-    10,
-    20,
-    Math.floor(yearsToGoal / 2),
-    yearsToGoal,
-  ]
-    .filter((v) => v > 0 && v <= yearsToGoal)
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort((a, b) => a - b);
-}
-
-/**
- * Derive a complete milestone projection from a user_plan.md content string.
- * Returns null if user_plan is missing required fields.
- */
+/** Derive a complete projection from a user_plan.md content string. */
 export function projectFromUserPlan(
   planText: string,
-): { plan: UserPlanParsed; risk: RiskTolerance; milestones: Milestone[] } | null {
+): MilestoneProjection | null {
   const plan = parseUserPlan(planText);
+  // Horizon: prefer the actual target date; fall back to a stated horizon.
+  const monthsToGoal =
+    monthsUntil(plan.goalDate) ??
+    (plan.horizonYears !== null ? Math.round(plan.horizonYears * 12) : null);
+
   if (
     plan.goalAmount === null ||
     plan.currentCorpus === null ||
     plan.monthlyInvestable === null ||
-    plan.horizonYears === null
+    monthsToGoal === null
   ) {
     return null;
   }
+
   const risk = parseRiskTolerance(planText);
+  const assumedReturn = risk === "unknown" ? 9 : ASSUMED_RETURN[risk];
+  const monthlyReturn = assumedReturn / 100 / 12;
+
   const milestones = projectMilestones({
     startingCorpus: plan.currentCorpus,
     monthlyContribution: plan.monthlyInvestable,
-    yearsToGoal: plan.horizonYears,
+    monthsToGoal,
     risk,
-    goalAmount: plan.goalAmount,
   });
-  return { plan, risk, milestones };
+  const projectedFinal =
+    milestones[milestones.length - 1]?.projectedCorpus ?? plan.currentCorpus;
+  const requiredMonthly = requiredMonthlyContribution(
+    plan.goalAmount,
+    plan.currentCorpus,
+    monthsToGoal,
+    monthlyReturn,
+  );
+  // The return rate the plan needs, GIVEN the planned monthly contribution.
+  const requiredReturn = requiredAnnualReturn(
+    plan.goalAmount,
+    plan.currentCorpus,
+    plan.monthlyInvestable,
+    monthsToGoal,
+  );
+
+  return {
+    plan,
+    risk,
+    assumedReturn,
+    monthsToGoal,
+    milestones,
+    projectedFinal,
+    plannedMonthly: plan.monthlyInvestable,
+    requiredMonthly,
+    requiredReturn,
+    goalAmount: plan.goalAmount,
+    onTrack: projectedFinal >= plan.goalAmount,
+  };
 }

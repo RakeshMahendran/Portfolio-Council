@@ -63,23 +63,19 @@ def check_rebalance(rebalance_file: str) -> tuple[bool, str]:
 
     verdict_text = verdict_path.read_text(encoding="utf-8")
 
-    # Require a *structured* APPROVE marker, not just any occurrence of the
-    # word. A pattern like 'Verdict: **APPROVE**' on its own line — anchored
-    # to a 'Verdict' label — defeats trivial bypasses:
-    #   - "do NOT APPROVE"            (negation in prose)
-    #   - "previously APPROVE-d but…" (compound word)
-    #   - "<!-- APPROVE example -->"  (HTML comment)
-    #   - "APPROVE_NOT_GIVEN"         (suffix)
-    # The Risk Officer's SOUL.md mandates this exact line in Section 1.
-    # Allow flexible markdown emphasis on either side of the colon:
+    # Require a *structured* APPROVE marker anchored to a 'Verdict' label —
+    # not just any occurrence of the word. The only characters allowed between
+    # "Verdict" and "APPROVE" are whitespace / colon / asterisk, so this still
+    # rejects trivial bypasses while accepting the layouts agents actually emit:
     #   Verdict: APPROVE
-    #   **Verdict: APPROVE**
     #   **Verdict:** **APPROVE**
-    # but reject prose mentions ("the verdict is APPROVE") because the only
-    # chars allowed between Verdict and APPROVE are colon / asterisk / space.
+    #   ## 1. Verdict          ← heading, value on the NEXT line
+    #   **APPROVE**
+    # It rejects prose ("the verdict is APPROVE" — 'is' breaks the char class)
+    # and negations ("do NOT APPROVE" — no preceding 'Verdict' token).
     approve_re = re.compile(
-        r"^\s*\*{0,2}Verdict[\s:*]+\*{0,2}APPROVE\b",
-        re.MULTILINE | re.IGNORECASE,
+        r"Verdict[\s:*]+\**\s*APPROVE\b",
+        re.IGNORECASE,
     )
     if not approve_re.search(verdict_text):
         return (

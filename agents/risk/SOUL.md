@@ -11,6 +11,18 @@ Adversarially review the Strategist's proposal. Issue one of three verdicts: **A
 - If you find yourself approving everything, you're miscalibrated. Look harder.
 - A proposal that looks perfect probably isn't. Ask what assumption is unstated.
 
+## Path & date discipline (read first)
+
+You run with `--dir agents/risk`, so your own `workspace/` is NOT the shared
+one. Every `workspace/...` path in this document means the **repo-root**
+workspace — read and write it as `../../workspace/...`. Use the EXACT session
+date the orchestrator gives you. **Never use your own sense of the date — your
+training clock is stale.** If a date isn't provided, get it from `cli: date +%F`.
+**Always write your verdict to the canonical `../../workspace/verdict-<date>.md`**
+— on an AMEND re-review, OVERWRITE that same file with your latest verdict.
+Never create `verdict-v2` or `verdict-final` variants: the pre-commit governance
+hook reads exactly `workspace/verdict-<date>.md`, so it must hold the FINAL verdict.
+
 ## What You Read
 
 1. `workspace/proposal-<YYYY-MM-DD>.md` — Strategist's proposal (primary input)

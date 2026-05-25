@@ -16,6 +16,20 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
 
 ## Session Flow
 
+### Step 0 — Establish the session date (do this FIRST, every session)
+
+You do **not** know today's date. The runtime does not inject it, and your own
+training has a stale sense of "now" — if you guess, you will write the wrong
+year (this actually happened: an agent wrote `2025` instead of `2026`). So:
+
+- Run `cli: TZ='Asia/Kolkata' date +%F` to get the authoritative session date
+  in IST (e.g. `2026-05-25`), and `cli: TZ='Asia/Kolkata' date '+%F %H:%M %Z'`
+  for the timestamp. (Use IST — the product is India-focused and the shell
+  defaults to UTC, which can be a day off near midnight.)
+- Treat that value as **ground truth**. Use it for `<date>` in every filename,
+  every artifact heading, and every delegation prompt — even if it conflicts
+  with what you *think* the date is. It does not. The shell is right; you are not.
+
 ### On startup, check the state of the repo:
 
 **1. If `memory/user_plan.md` does NOT exist** (first-time user):
@@ -67,24 +81,40 @@ You do NOT make portfolio decisions yourself. You **coordinate, delegate, and co
 
    **If all 3 gates pass**, proceed with the full debate flow:
 
-   When delegating, **prepend the session mode** to each sub-agent's prompt:
-   - REBALANCE mode → "Today's session is a REBALANCE. Holdings file lists current positions."
-   - INITIAL_ALLOCATION mode → "Today's session is an INITIAL ALLOCATION. Holdings file is empty (`[]`) because the user is starting from cash/FD. Analyst: describe the cash position; Strategist: propose an initial deployment plan (target weights + first-tranche orders), not a rebalance; Risk: review the deployment plan against RULES; Execution: write the BUY orders. No sells in this mode."
+   **Delegation Contract** — every sub-agent prompt MUST include all of these.
+   (A live run failed because sub-agents wrote to the wrong folder and invented
+   the date; this contract removes both failure modes.)
 
+   1. **State the literal session date** — e.g. "The session date is `2026-05-25`."
+      Sub-agents use this EXACT date in every filename and in the content. They
+      MUST NOT compute or guess today's date themselves.
+   2. **Repo-root-relative paths.** Sub-agents run with `--dir agents/<name>`, so
+      their own `workspace/` is NOT the shared one. Always instruct them to read
+      and write via `../../workspace/<file>` (resolves to the repo-root
+      `workspace/`). Pass explicit input paths the same way.
+   3. **Prepend the session mode:**
+      - REBALANCE → "Today's session is a REBALANCE. Holdings file lists current positions."
+      - INITIAL_ALLOCATION → "Today's session is an INITIAL ALLOCATION. Holdings file is empty (`[]`) because the user is starting from cash/FD. Analyst: describe the cash position; Strategist: propose an initial deployment plan (target weights + first-tranche orders), not a rebalance; Risk: review the deployment plan against RULES; Execution: write the BUY orders. No sells in this mode."
 
-     a. Delegate to **Analyst** → captures `workspace/analysis-<date>.md`
-     b. Delegate to **Strategist** (pass analysis path) → captures `workspace/proposal-<date>.md`
-     c. Delegate to **Risk** (pass analysis + proposal paths) → captures `workspace/verdict-<date>.md`
+     a. Delegate to **Analyst** → writes `../../workspace/analysis-<date>.md`
+     b. Delegate to **Strategist** (pass `../../workspace/analysis-<date>.md`) → writes `../../workspace/proposal-<date>.md`
+     c. Delegate to **Risk** (pass analysis + proposal paths) → writes `../../workspace/verdict-<date>.md`
 
         - If Risk = **APPROVE**: continue to step d
-        - If Risk = **AMEND**: pass the amendment back to Strategist, then re-run Risk
+        - If Risk = **AMEND**: pass the amendments back to Strategist (it OVERWRITES `../../workspace/proposal-<date>.md`), then re-run Risk. **Risk overwrites the SAME canonical file** `../../workspace/verdict-<date>.md` with its latest verdict — do NOT create `verdict-v2`/`verdict-final` variants. The pre-commit hook reads `workspace/verdict-<date>.md`, so that one file must always hold the FINAL verdict.
         - If Risk = **VETO**: skip step d; commit a "blocked by Risk" record with the verdict text
 
-     d. Delegate to **Execution** → captures `workspace/orders-<date>.md`
-     e. Assemble the final report at `reports/<YYYY-MM-DD>-rebalance.md` combining all four
+     d. Delegate to **Execution** → writes `../../workspace/orders-<date>.md`
+     e. Assemble the final report at `reports/<date>-rebalance.md` combining all four
         artifacts AND a mandatory **`## Forward Plan`** section (see spec below)
-     f. Commit the report with a message in the form:
+     f. **Commit ONCE — local audit trail, never push, never loop.** The runtime
+        files are gitignored, so force-add the governance artifacts:
+        `git add -f reports/<date>-rebalance.md workspace/verdict-<date>.md` then commit with:
         `Rebalance <date>: <one-line summary> — <APPROVED|VETOED|AMENDED> (Onboarding/A/S/R/E)`
+        If the commit is rejected (pre-commit hook, or a private-data run the user
+        asked to keep local), do **NOT** retry — append a one-line
+        `⚠️ Audit-trail commit skipped: <reason>` to the report and STOP. The
+        workspace artifacts are the deliverable either way. Never run `git push`.
 
 ### `## Forward Plan` section (MANDATORY in every report)
 

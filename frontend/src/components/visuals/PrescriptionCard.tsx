@@ -354,7 +354,9 @@ export function PrescriptionCard() {
               <span>
                 ⏰ Your goal horizon:{" "}
                 <span className="text-zinc-300 font-medium">
-                  {data.userPlan.horizonYears} years
+                  {data.userPlan.horizonYears < 2
+                    ? `${Math.round(data.userPlan.horizonYears * 12)} months`
+                    : `${data.userPlan.horizonYears.toFixed(data.userPlan.horizonYears % 1 === 0 ? 0 : 1)} years`}
                 </span>
                 {data.userPlan.goalDate && (
                   <span className="text-zinc-500"> (target {data.userPlan.goalDate})</span>

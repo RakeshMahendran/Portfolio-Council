@@ -32,8 +32,10 @@ export function parseInr(s: string | undefined | null): number | null {
     const n = Number(k[1].replace(/,/g, ""));
     return isNaN(n) ? null : n * 1_000;
   }
-  // Plain rupees: "₹10,00,000" or "₹10,00,000.50"
-  const plain = s.match(/₹?\s*([\d,]+(?:\.\d+)?)/);
+  // Plain rupees: "₹10,00,000" or "₹10,00,000.50". Require a real leading digit
+  // so a stray comma (e.g. from prose like "digital, per plan") can't match and
+  // collapse to 0.
+  const plain = s.match(/₹?\s*(\d[\d,]*(?:\.\d+)?)/);
   if (plain) {
     const n = Number(plain[1].replace(/,/g, ""));
     return isNaN(n) ? null : n;
@@ -79,13 +81,16 @@ export type AnalystParsed = {
 };
 
 const COMPOSITION_PATTERNS: { label: string; kind: AnalystComposition["kind"]; regex: RegExp }[] = [
+  // "Equity portfolio: ₹10,58,195" / "Equity: ₹X" — the holdings block.
+  { label: "Equity", kind: "equity", regex: /(?:^|\n)\s*-?\s*Equity(?:\s*portfolio)?:\s*₹?\s*([\d,]+)/i },
   { label: "Stocks", kind: "equity", regex: /(?:^|\n)\s*-?\s*Stocks?:\s*₹?\s*([\d,]+)/i },
   { label: "Mutual Funds", kind: "mf", regex: /(?:^|\n)\s*-?\s*Mutual\s*Funds?:\s*₹?\s*([\d,]+)/i },
   { label: "Cash", kind: "cash", regex: /(?:^|\n)\s*-?\s*Cash(?:\/Savings|\/Other)?:\s*₹?\s*([\d,]+)/i },
   { label: "Fixed Deposit", kind: "fd", regex: /(?:^|\n)\s*-?\s*Fixed\s*Deposit(?:s)?:\s*₹?\s*([\d,]+)/i },
   // Anchor Gold to ₹ specifically — otherwise "Gold: $4,523" from the
-  // global-markets section gets misread as ₹4,523 in the user's portfolio.
-  { label: "Gold / Gold ETF", kind: "gold", regex: /(?:^|\n)\s*-?\s*Gold(?:\s*ETFs?)?:\s*₹\s*([\d,]+)/i },
+  // global-markets section gets misread as ₹4,523. Allow a parenthetical
+  // aside before the colon ("Gold (Augmont + digital, per plan): ₹47,771").
+  { label: "Gold / Gold ETF", kind: "gold", regex: /(?:^|\n)\s*-?\s*Gold(?:\s*ETFs?)?(?:\s*\([^)]*\))?:\s*₹\s*([\d,]+)/i },
   { label: "Bonds", kind: "bonds", regex: /(?:^|\n)\s*-?\s*Bonds?:\s*₹?\s*([\d,]+)/i },
   { label: "Other", kind: "other", regex: /(?:^|\n)\s*-?\s*Other:\s*₹?\s*([\d,]+)/i },
 ];
@@ -94,20 +99,25 @@ export function parseAnalyst(md: string): AnalystParsed {
   // Total portfolio value — agents use several phrasings, sometimes wrapped
   // in markdown bold (`**`) or laid out as a table row footer
   // (`| **Total Portfolio** | **10,00,000** | **100.0%** |`).
-  const B = "[*\\s]*"; // any mix of `*` and whitespace, between table cells
+  // `[:*\s]*` after the label absorbs the markdown-bold wrap agents emit
+  // (`**Total Portfolio Value:** ₹10,58,195`). Use the capture group, not the
+  // whole match, so parseInr reads the intended number.
   const totalMatch =
-    md.match(/Total\s*Portfolio\s*Value\s*:?\s*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
-    md.match(/Total\s*Corpus\s*:?\s*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
-    md.match(/Portfolio\s*Value\s*:?\s*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
-    md.match(new RegExp(`Total\\s*Portfolio${B}\\|?${B}₹?\\s*([\\d,]+(?:\\.\\d+)?)`, "i"));
-  const totalPortfolio = totalMatch ? parseInr(totalMatch[0]) : null;
+    md.match(/Total\s*Portfolio\s*Value[:*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
+    md.match(/Total\s*Corpus[:*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
+    md.match(/Portfolio\s*Value[:*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
+    md.match(/Total\s*Wealth\s*(?:is)?[:*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i) ??
+    md.match(/Total\s*Portfolio[*\s]*\|?[*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i);
+  const parsedTotal = totalMatch ? parseInr("₹" + totalMatch[1]) : null;
 
   // Composition rows. Order patterns most-specific first.
   const composition: AnalystComposition[] = [];
   for (const { label, kind, regex } of COMPOSITION_PATTERNS) {
     const m = md.match(regex);
     if (m) {
-      const amount = parseInr(m[0]);
+      // Use the captured number, not the whole match — the label text can
+      // contain commas/digits that would mislead parseInr.
+      const amount = parseInr("₹" + m[1]);
       if (amount !== null && amount > 0) {
         composition.push({ label, amount, kind });
       }
@@ -144,6 +154,14 @@ export function parseAnalyst(md: string): AnalystParsed {
       }
     }
   }
+
+  // Donut consistency: when we have a full multi-class breakdown, the total IS
+  // the sum of segments (= total wealth). This keeps the donut self-consistent
+  // (segments reconcile to the centre total) and makes goal-progress reflect
+  // ALL assets — not just the equity-only "Total Portfolio Value".
+  const compSum = composition.reduce((s, c) => s + c.amount, 0);
+  const totalPortfolio =
+    composition.length >= 2 && compSum > 0 ? compSum : parsedTotal;
 
   // Concentration cap (Hard Rule #2)
   const capMatch =
@@ -262,8 +280,12 @@ export function parseRisk(md: string): RiskParsed {
   // The label sits inside parentheses; the status word follows the colon.
   const rules: RuleCompliance[] = [];
   const seenRule = new Set<string>();
+  // `[*\s]*` around the colon tolerates ANY mix of bold markers / spaces, incl.
+  // the double-bold form `):** **PASS**`. The status capture allows internal
+  // spaces so multi-word statuses ("FULLY ALIGNED", "CONDITIONAL PASS") are
+  // read whole, not just the first word.
   const ruleBulletRe =
-    /(?:^|\n)\s*[-*]\s*\*{0,2}\s*(Hard|Soft)\s*Rule\s*#?(\d+)\s*\(([^)]+)\)\s*\*{0,2}\s*:\s*\*{0,2}\s*([A-Za-z/]+)/gi;
+    /(?:^|\n)\s*[-*]\s+[*\s]*(Hard|Soft)\s*Rule\s*#?(\d+)\s*\(([^)]+)\)[*\s]*:[*\s]*([A-Za-z/][A-Za-z/ ]*)/gi;
   let m;
   while ((m = ruleBulletRe.exec(md)) !== null) {
     const kind = (m[1][0].toUpperCase() + m[1].slice(1).toLowerCase()) as "Hard" | "Soft";
@@ -368,10 +390,12 @@ export function parseExecution(md: string): ExecutionParsed {
     const iAct = find(/\baction\b/);
     const iQty = find(/qty|quantity|units?/);
     const iType = find(/order\s*type/);
-    // Prefer the rupee-amount column (Estimated INR / Amount / Value) over the
-    // per-unit "Price Target" — the latter is often free text ("Closing NAV").
-    const iAmount = find(/estimated\s*inr|amount|value|deploy/);
-    const iPrice = iAmount >= 0 ? iAmount : find(/price/);
+    // Two money columns: the per-unit "Price Target" (the LIMIT price you place)
+    // and the rupee amount ("Expected/Estimated INR", "Amount", "Value"). Match
+    // "INR" loosely so "Expected INR" works. Per-row we prefer a concrete price
+    // target, falling back to the amount when the price is text ("Current NAV").
+    const iPriceTarget = find(/price\s*target/, /\bprice\b/);
+    const iAmount = find(/\binr\b|amount|value|deploy/);
     const iNotes = find(/note|sequenc/);
 
     let seq = 1;
@@ -386,13 +410,18 @@ export function parseExecution(md: string): ExecutionParsed {
       // skip the "TOTAL" footer rows
       if (/^total\b/i.test(symbol)) continue;
       const seqCell = iSeq >= 0 ? Number(cells[iSeq]) : NaN;
+      const priceTarget = (iPriceTarget >= 0 ? cells[iPriceTarget] : "")?.trim() ?? "";
+      const amountCell = (iAmount >= 0 ? cells[iAmount] : "")?.trim() ?? "";
+      // Show the LIMIT price when it's a real number (equity orders); otherwise
+      // the ₹ amount (debt-fund "Current NAV" rows → show ₹1,00,000).
+      const priceOut = /\d/.test(priceTarget) ? priceTarget : amountCell;
       orders.push({
         seq: Number.isFinite(seqCell) ? seqCell : seq++,
         symbol: symbol.slice(0, 48),
         action,
         qty: (iQty >= 0 ? cells[iQty] : "")?.replace(/\s+/g, " ").trim() || "—",
         orderType: iType >= 0 ? cells[iType] : undefined,
-        price: iPrice >= 0 ? cells[iPrice]?.replace(/^₹\s*/, "") : undefined,
+        price: priceOut.replace(/^₹\s*/, "") || undefined,
         sequencing: (iNotes >= 0 ? cells[iNotes] : "")?.slice(0, 100) ?? "",
       });
     }
@@ -419,9 +448,11 @@ export function parseExecution(md: string): ExecutionParsed {
 
   const totalBuyMatch = md.match(/Total\s*BUY[^\n]*?₹\s*([\d,.]+)/i);
   const totalSellMatch = md.match(/Total\s*SELL[^\n]*?₹\s*([\d,.]+)/i);
+  // "Net capital deployment" / "Net deployment" / "Total Deployment" — allow a
+  // word (e.g. "capital") between "Net" and "deployment".
   const netMatch =
-    md.match(/Net\s*deployment[^\n]*?₹\s*([\d,.\-]+)/i) ??
-    md.match(/Total\s*Deployment[^\n]*?₹\s*([\d,.]+)/i);
+    md.match(/Net\s+(?:\w+\s+)?deployment[^\n]*?₹\s*([\d,.\-]+)/i) ??
+    md.match(/Total\s*(?:capital\s*)?Deployment[^\n]*?₹\s*([\d,.]+)/i);
   const liqMatch =
     md.match(/Post[-\s]?execution\s*liquidity[^\n]*?₹\s*([\d,.]+)/i) ??
     md.match(/Post[-\s]?deployment\s*FD[^\n]*?₹\s*([\d,.]+)/i);
@@ -472,6 +503,9 @@ export function parseUserPlan(md: string): UserPlanParsed {
   const horizonMatch =
     md.match(/Time\s*Horizon:\s*~?\s*(\d+(?:\.\d+)?)\s*(?:year|yr)/i) ??
     md.match(/Time\s*Horizon:\s*~?\s*\d+\s*(?:year|yr)s?\s*\(?\s*(\d+)\s*month/i);
+  // Months-only horizon ("Time Horizon: ~13 months") → fractional years.
+  const horizonMonthsMatch =
+    !horizonMatch && md.match(/Time\s*Horizon:\s*~?\s*(\d+(?:\.\d+)?)\s*month/i);
   const currentCorpusMatch =
     md.match(/Portfolio\s*Value:\s*₹?\s*([\d,]+(?:\.\d+)?)/i);
   const monthlyMatch =
@@ -481,7 +515,11 @@ export function parseUserPlan(md: string): UserPlanParsed {
     goalType: goalTypeMatch ? goalTypeMatch[1].trim().replace(/[*.]/g, "") : null,
     goalAmount: goalAmountMatch ? parseInr("₹" + goalAmountMatch[1]) : null,
     goalDate: goalDateMatch ? goalDateMatch[1].trim().replace(/[*.]/g, "") : null,
-    horizonYears: horizonMatch ? Number(horizonMatch[1]) : null,
+    horizonYears: horizonMatch
+      ? Number(horizonMatch[1])
+      : horizonMonthsMatch
+        ? Number(horizonMonthsMatch[1]) / 12
+        : null,
     currentCorpus: currentCorpusMatch ? parseInr("₹" + currentCorpusMatch[1]) : null,
     monthlyInvestable: monthlyMatch ? parseInr("₹" + monthlyMatch[1]) : null,
   };
@@ -839,20 +877,35 @@ export function parseStressTests(md: string): StressScenario[] {
     // Drawdown can be written either way:
     //   "→ **-8.85% drawdown**"   (% before the word)
     //   "drawdown = -8.85%"        (word before the %)
+    // A scenario where you EXITED the exposed positions is a protection win,
+    // not a drawdown — flag it so the card can say "protected" rather than "—".
+    const protectedExit = /zero\s+exposure|avoided\s+(?:potential\s+)?loss|positions?\s+exited|no\s+exposure/i.test(block);
     const ddPctMatch =
       block.match(/(-?[\d.]+)\s*%\s*drawdown/i) ??
-      block.match(/(?:max(?:imum)?\s*)?drawdown[^=:\n%]*[=:]\s*\*?\*?(-?[\d.]+)\s*%/i);
+      block.match(/(?:max(?:imum)?\s*)?drawdown[^=:\n%]*[=:]\s*\*?\*?(-?[\d.]+)\s*%/i) ??
+      // "...₹13,86,999** (-7.8%)" — a parenthetical negative % after a value.
+      block.match(/\(\s*(-[\d.]+)\s*%/);
     const ddAmountMatch = block.match(/(?:Total\s*)?drawdown[^₹\n]*?₹\s*([\d,.]+)/i);
     const recoveryMatch = block.match(/Recovery\s*time[^:]*:\s*\*?\*?([^*\n]+?)\s*\*?\*?(?:\n|$)/i);
+    const dd = ddPctMatch ? Number(ddPctMatch[1]) : null;
     let verdict: StressScenario["verdict"] = null;
-    if (/UNACCEPTABLE|\bFAIL/i.test(block)) verdict = "UNACCEPTABLE";
+    if (/UNACCEPTABLE|\bFAIL|breach/i.test(block)) verdict = "UNACCEPTABLE";
     else if (/MARGINAL|\bMARGIN/i.test(block)) verdict = "MARGINAL";
-    else if (/ACCEPTABLE|PASS(?:ES)?\b/i.test(block)) verdict = "ACCEPTABLE";
+    else if (
+      /ACCEPTABLE|PASS(?:ES)?\b/i.test(block) ||
+      protectedExit ||
+      (dd !== null && Math.abs(dd) <= 15)
+    )
+      verdict = "ACCEPTABLE";
     out.push({
       name,
-      drawdownPct: ddPctMatch ? Number(ddPctMatch[1]) : null,
+      drawdownPct: dd,
       drawdownAmount: ddAmountMatch ? parseInr("₹" + ddAmountMatch[1]) : null,
-      recovery: recoveryMatch ? recoveryMatch[1].trim() : null,
+      recovery: recoveryMatch
+        ? recoveryMatch[1].trim()
+        : protectedExit
+          ? "Protected — positions exited"
+          : null,
       verdict,
     });
   }
