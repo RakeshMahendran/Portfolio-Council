@@ -47,6 +47,11 @@ The whole debate gets **committed to git** — every analysis, proposal, verdict
 
 The pre-commit hook (`hooks/pre-commit`) refuses to commit a rebalance unless `workspace/verdict-<date>.md` contains a structured `Verdict: APPROVE` marker. That's governance at the git layer — not theatre.
 
+<img width="1919" height="991" alt="Screenshot 2026-05-25 144527" src="https://github.com/user-attachments/assets/f2b63ded-9a09-4974-b4d2-e5a95db68d28" />
+<img width="1919" height="981" alt="Screenshot 2026-05-25 144556" src="https://github.com/user-attachments/assets/ffbcdb47-a182-4596-b2a4-b2869e169b7c" />
+<img width="1916" height="982" alt="Screenshot 2026-05-25 144646" src="https://github.com/user-attachments/assets/38e12e1d-6bff-4886-98ad-715701c98bc3" />
+
+
 ---
 
 ## Why agents-as-repos isn't just packaging
