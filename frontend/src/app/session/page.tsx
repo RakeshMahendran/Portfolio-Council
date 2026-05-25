@@ -375,7 +375,7 @@ function SessionPageInner() {
         onClick={() => setShowDrawer(true)}
         aria-label="View process logs"
         title="View raw gitclaw stream"
-        className={`fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 ${
+        className={`fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 ${
           runStatus === "running"
             ? "bg-amber-600 hover:bg-amber-500 ring-4 ring-amber-600/30 animate-pulse"
             : "bg-zinc-800 hover:bg-zinc-700 border border-zinc-700"
