@@ -6,333 +6,322 @@
 
 ## Executive Summary
 
-**Session Type:** REBALANCE  
-**Decision:** **APPROVED** by Risk Officer  
-**Status:** Orders generated; awaiting manual execution
+**Decision:** APPROVED with 11 execution conditions  
+**Session Type:** Rebalance (monthly review)  
+**Session Date:** 2026-05-25  
+**Agent Sign-Offs:** Analyst → Strategist → Risk Officer → Execution (all complete)
 
-**The Situation:** Portfolio holds ₹13.33L with a ₹40L house down-payment goal in 13 months (June 2027). Emergency cash buffer is deficient by ₹1.48L (27.1% shortfall). Equity allocation of 66.5% is high for a capital-preservation horizon. Three positions deep underwater: BAJAJHFL -44.5%, PRAJIND -41.9%, RVNL -38.3%. BSE Ltd at +114.4% gain (overvalued: PE 81.1, RSI 79.6).
+### The Situation
+Portfolio worth ₹13.33L toward ₹40L house down-payment goal by June 2027 (13 months away). Current equity allocation of 66.5% (₹8.87L) is aggressive for a short, capital-preservation horizon. Emergency liquidity buffer is DEFICIENT by ₹1.48L (have ₹3.98L, need ₹5.46L per RULES.md). Three holdings deeply underwater: BAJAJHFL -44%, PRAJIND -42%, RVNL -38%. One position (BSE Ltd) up 115% but trading at extreme valuations (PE 81.2, RSI 79.8).
 
-**The Decision:** Sell 6 positions to raise ₹1.86L: exit losers (BAJAJHFL, PRAJIND), book profits on overvalued winners (BSE, CUMMINSIND), trim high-volatility ETFs (MIDCAP -1000 units, SMALLCAP -300 units). Transfer proceeds to Fixed Deposit. This restores liquidity buffer to 106.8% compliance and reduces equity from 66.5% to 52.6% — first phase of the capital-safe glide path toward June 2027.
+### The Decision
+Sell 6 positions to raise ₹1.14L for Fixed Deposit, restoring liquidity compliance to 95% (up from 72.9%) and de-risking equity allocation from 66.5% to 52.4%. Exit two illiquid losers (BAJAJHFL, PRAJIND), book profit from overvalued winners (BSE, CUMMINSIND), and trim volatile ETFs (MIDCAP, SMALLCAP). Risk Officer approved despite timing concerns (selling into momentum) and incomplete liquidity restoration (₹27K still short), citing Hard Rule #6 (capital preservation > growth) and the urgency of the emergency-fund deficiency.
 
-**Why Approved:** All 7 Hard Rules PASS. Liquidity compliance restored. De-risking initiated. Risk Officer added one amendment: emergency trigger — if NIFTY drops >8% in any week before July 2026 session, convene emergency rebalance to trim equity to 40-45% immediately.
+### The Orders
+6 LIMIT orders to execute May 25-27:
+1. SELL BAJAJHFL -121 @ ₹83.00 → ₹10,043
+2. SELL PRAJIND -22 @ ₹393.00 → ₹8,646
+3. SELL BSE -11 @ ₹4,280.00 → ₹47,080
+4. SELL CUMMINSIND -3 @ ₹5,370.00 → ₹16,110
+5. SELL MIDCAP -1,000 @ ₹18.00 → ₹18,000
+6. SELL SMALLCAP -300 @ ₹45.50 → ₹13,650
 
-**What Happens Next:** User places 6 sell orders today (May 25, 2026) via broker app. After T+1 settlement (May 27), transfer ₹1.86L to Fixed Deposit. Next scheduled review: July 1, 2026 (6 weeks).
+**Total proceeds:** ₹1,13,529 (net ₹1,10,747 after ₹2,782 STCG tax)  
+**Action:** Transfer ₹1,13,529 to Fixed Deposit
+
+### Next Steps
+- **Immediate:** Place all 6 orders today (May 25) or tomorrow (May 26)
+- **Settlement:** Confirm ₹1.14L in trading account by May 27-28 (T+1 to T+2)
+- **FD Transfer:** Move full proceeds to FD before May 31
+- **Next Review:** June 25, 2026 (monthly cadence)
+- **June Plan:** Close ₹27K liquidity gap (₹30K from June surplus → FD), trim equity to 45% (exit ₹70-80K more), deploy ₹1-1.2L to liquid/debt fund
 
 ---
 
-## Section 1: Portfolio Analysis (Analyst)
+## Analyst Report Summary
 
-**Full report:** `workspace/analysis-2026-05-25.md`
+**From:** `workspace/analysis-2026-05-25.md` (11:49 AM IST, live market data)
+
+### Portfolio Snapshot (₹13.33L)
+- **Equity:** ₹8,87,386 (66.56%) — 29 positions (stocks + ETFs)
+- **Liquid:** ₹3,98,000 (29.86%) — ₹3,08,000 cash + ₹90,000 FD
+- **Gold:** ₹47,771 (3.58%) — GOLDBEES/SILVERBEES + physical/digital
 
 ### Key Findings
+1. **Liquidity DEFICIENT:** ₹3.98L available vs. ₹5.46L required (3× monthly outflows ₹1.82L) → 27.1% shortfall (₹1.48L)
+2. **Equity too high:** 66.5% allocation for 13-month capital-safe horizon violates de-risking glide path (should be trending toward 20-25% by March 2027)
+3. **Deep losers:** BAJAJHFL -44% (₹8,055 loss), PRAJIND -42% (₹6,265 loss), RVNL -38% (₹6,490 loss) — ₹20,810 combined unrealized losses
+4. **Overvalued winners:** BSE +115% but PE 81.2 (vs. NIFTY ~25-27), RSI 79.8 overbought; CUMMINSIND +54% but "valuation FAIL, near-zero ROE" per fundamentals
+5. **Concentration:** MUTHOOTFIN 7.05% highest position (well under 15% cap, no violations)
+6. **Market context:** NIFTY 24,050 (+0.51% today), VIX 16.70 (-6.7%, moderate fear), broad rally (16 green / 3 red) — favorable for rebalancing
 
-**Portfolio Snapshot (as of 2026-05-25 07:05 IST):**
-- **Total Value:** ₹13,32,559
-  - Equity (29 stocks + 4 ETFs): ₹8,86,788 (66.5%)
-  - Cash + FD: ₹3,98,000 (29.9%)
-  - Gold (GOLDBEES + SILVERBEES): ₹1,20,747 (9.1% - included in equity subtotal)
-  - Standalone Gold: ₹47,771 (3.6%)
-
-**Goal Progress:**
-- Target: ₹40,00,000 by June 2027 (13 months)
-- Gap: ₹26,67,441
-- Required monthly progress: ₹2,05,188
-- Available monthly surplus: ₹1,80,000
-- **Shortfall:** ₹25,188/month (12.3%)
-
-**Market Context:**
-- NIFTY 50: 23,961 (+0.14%)
-- BANKNIFTY: 54,995 (+1.74%)
-- India VIX: 17.07 (moderate fear; declining)
-- Market mode: Risk-on with broad participation; Bank stocks outperforming
-
-**Critical Observations:**
-
-1. **Liquidity Buffer DEFICIENT:** ₹3,98,000 current vs. ₹5,46,000 required (3× monthly outflows of ₹1,82,000) → **72.9% compliant; shortfall ₹1,48,000 (27.1%)**. Violates Hard Rule #3.
-
-2. **Equity-Horizon Mismatch:** 66.5% equity allocation for a 13-month capital-preservation goal. User_plan.md states corpus "must be substantially capital-safe by Q2 2027" (March 2027 = 10 months away). Current allocation conflicts with low-risk mandate.
-
-3. **Deep Losses (3 positions):**
-   - BAJAJHFL: -44.5% (₹8,073 loss; 1.13% of portfolio)
-   - PRAJIND: -41.9% (₹6,248 loss; 0.98%)
-   - RVNL: -38.3% (₹6,454 loss; 1.17%)
-   - Combined: ₹20,776 unrealized loss (1.56% of portfolio)
-
-4. **Overvalued Winners:**
-   - BSE: +114.4% (₹25,129 gain; PE 81.1, RSI 79.6 — extreme valuation)
-   - CUMMINSIND: +53.0% (₹5,575 gain; flagged "EXIT — valuation FAIL")
-
-5. **Goal Attainability Challenge:** Closing the ₹26.67L gap requires ₹25K/month MORE than available surplus. Must come from portfolio appreciation — requires 18.5% annualized return over 13 months, which conflicts with low-risk mandate.
-
-6. **Concentration:** MUTHOOTFIN at 10.58% (highest position); within 15% cap but watch if it rallies.
-
-**Analyst's Bottom Line:** Liquidity deficiency and equity overallocation are immediate governance violations. Deep losers contradict capital-preservation mandate. Overvalued winners present profit-booking opportunity. Market conditions favorable for rebalancing (VIX declining, broad rally).
+### Goal Progress
+- **Current:** ₹13.33L
+- **Target:** ₹40L by June 2027 (13 months)
+- **Gap:** ₹26.67L
+- **Monthly SIP capacity:** ₹1.80L
+- **Required monthly progress:** ₹2.05L (including portfolio returns) → needs 18-19% annualized portfolio return
+- **Status:** Aggressive return target; achievable but requires de-risking into capital-safe instruments to prevent drawdown from derailing goal
 
 ---
 
-## Section 2: Rebalance Proposal (Strategist)
+## Strategist Proposal Summary
 
-**Full proposal:** `workspace/proposal-2026-05-25.md`
+**From:** `workspace/proposal-2026-05-25.md`
 
-### Proposed Actions
+### Primary Plan: Sell 6, Restore Liquidity, De-Risk Equity
 
-| # | Action | Symbol | Qty | Target Price | Proceeds | Rule Cited | Rationale |
-|---|--------|--------|-----|--------------|----------|------------|-----------|
-| 1 | SELL | BAJAJHFL | -121 | ₹83 | +₹10,061 | Hard Rules #6, #7 + Soft Rule #1 | Deep loss -44.5%; no recovery catalyst; capital preservation priority |
-| 2 | SELL | PRAJIND | -22 | ₹394 | +₹8,677 | Hard Rules #6, #7 + Soft Rule #1 | Loss -41.9%; short horizon doesn't allow turnaround hold |
-| 3 | SELL | BSE | -11 | ₹4,280 | +₹47,080 | Hard Rule #6 + Soft Rule #1 | Gain +114%; overvalued (PE 81.1, RSI 79.6); book profit |
-| 4 | SELL | CUMMINSIND | -3 | ₹5,360 | +₹16,080 | Hard Rule #6 + Soft Rule #1 | Gain +53%; flagged weak fundamentals; exit before reversal |
-| 5 | SELL | MIDCAP | -1000 | ₹18.02 | +₹18,020 | Hard Rule #6 + Soft Rule #1 | Trim high-volatility mid-cap ETF (RSI 65.6 overbought) |
-| 6 | SELL | SMALLCAP | -300 | ₹45.51 | +₹13,653 | Hard Rule #6 + Soft Rule #1 | Trim high-volatility small-cap ETF for short horizon |
-| 7 | DEPOSIT | Cash → FD | — | — | +₹1,85,571 | Hard Rule #3 | Restore liquidity buffer to compliance |
+#### Proposed Actions (with rule citations)
+| Action | Symbol | Qty | Price | Proceeds | Rule | Rationale |
+|--------|--------|-----|-------|----------|------|-----------|
+| SELL | BAJAJHFL | -121 | ₹83.30 | ₹10,079 | HR #6, #7, SR #1 | Loss -44%; illiquid; no recovery catalyst in 13 months |
+| SELL | PRAJIND | -22 | ₹393.65 | ₹8,660 | HR #6, #7, SR #1 | Loss -42%; PE 138 extreme; infra recovery speculative |
+| SELL | BSE | -11 | ₹4,291.20 | ₹47,203 | HR #6, SR #1 | Gain +115% but PE 81 unsustainable; book before reversion |
+| SELL | CUMMINSIND | -3 | ₹5,382.00 | ₹16,146 | HR #6, SR #1 | Gain +54%; weak ROE; fundamentals lag price |
+| SELL | MIDCAP | -1,000 | ₹18.02 | ₹18,020 | HR #3, #6, SR #1 | Trim volatile ETF; raise liquidity |
+| SELL | SMALLCAP | -300 | ₹45.56 | ₹13,668 | HR #3, #6, SR #1 | Trim volatile ETF; incompatible with capital-safe mandate |
+| TRANSFER | Cash → FD | — | — | -₹113,776 | HR #3 | Restore liquidity buffer 72.9% → 95% |
 
-**Total Net Cash Impact:** +₹1,85,571 (estimated at target prices; conservative LIMIT prices yield ~₹1,12,585)
+**Total raised:** ₹1,13,776 | **Tax:** ₹2,800 STCG | **Net:** ₹1,10,976
 
-### Portfolio Impact
+#### Portfolio Impact
+- **Liquidity:** ₹3.98L → ₹5.19L (72.9% → 95.0% compliant, ₹27K short of perfect)
+- **Equity:** ₹8.87L → ₹6.99L (66.5% → 52.4% allocation)
+- **Positions:** 29 → 27 (exits: BSE, BAJAJHFL, PRAJIND, CUMMINSIND)
+- **Concentration:** MUTHOOTFIN 7.05% → 10.08% (denominator effect; still under 15% cap)
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Total Portfolio Value | ₹13,32,559 | ₹13,32,559 | — |
-| Equity (stocks + ETFs) | ₹8,86,788 (66.5%) | ₹7,01,217 (52.6%) | -13.9pp |
-| Liquid (Cash + FD) | ₹3,98,000 (29.9%) | ₹5,83,571 (43.8%) | +13.9pp |
-| Gold | ₹47,771 (3.6%) | ₹47,771 (3.6%) | — |
-| Liquidity Buffer Compliance | ₹3,98,000 / ₹5,46,000 = 72.9% | ₹5,83,571 / ₹5,46,000 = 106.8% | +33.9pp |
-| Top Position (MUTHOOTFIN) | 10.58% | 13.4% | +2.8pp |
-| Goal Gap | ₹26,67,441 | ₹26,67,441 | — |
+#### Stress Tests (all PASS or MARGINAL PASS)
+- **NIFTY -10%:** Liquidity holds, goal requires 18-19% return (feasible)
+- **MUTHOOTFIN +20% surge:** Concentration drops to 8.33% (denominator effect, no breach)
+- **Combined stress (-10% NIFTY + MUTHOOTFIN -15%):** Marginal pass, requires 19.8% return (at edge of feasible)
+- **Small/mid-cap -15% correction:** 18.2% return needed (feasible)
 
-### Stress Test Results
+#### Weaknesses (Strategist self-disclosed)
+1. **Timing risk:** Selling BSE/CUMMINS into momentum (could rally another 10-20% before reversing)
+2. **Loss crystallization:** ₹14,321 realized losses without recovery attempt (BAJAJHFL/PRAJIND could bounce)
+3. **Equity still high:** 52.4% for 13-month horizon is better but not "substantially capital-safe" yet (needs Phase 2 trim to 45%, then 35%, then 20-25% by March 2027)
+4. **Liquidity 5% short:** 95% compliant leaves ₹27K gap (requires June surplus to close)
 
-**Scenario A: -10% NIFTY Shock**
-- Equity declines 8% (0.8 correlation) → ₹7,01,217 × 0.92 = ₹6,45,120
-- Total portfolio: ₹12,76,462 (-4.2%)
-- Liquidity buffer: ₹5,83,571 (still 106.8% compliant)
-- **Verdict:** Liquidity holds; goal gap worsens by ₹56K
+#### Plan B Options (Strategist offered 3 alternatives)
+- **Option 1 (Staged exits):** Sell losers first, BSE/CUMMINS over 7 days → lower timing risk, delayed compliance
+- **Option 2 (Ultra-conservative):** Exit losers only, preserve winners → 79.9% liquidity (still deficient)
+- **Option 3 (Aggressive):** Exit ₹2.09L, equity → 44.2%, liquidity 111.2% → one-shot glide path, high regret risk
 
-**Scenario B: +20% Concentration Stock Surge (MUTHOOTFIN)**
-- MUTHOOTFIN rallies 20% → value increases from ~₹94K to ₹113K
-- Portfolio grows to ₹13,52K; MUTHOOTFIN becomes 8.4% (no cap breach)
-- **Verdict:** Concentration cap not threatened
-
-**Scenario C: Combined Stress (-10% NIFTY + -15% small-cap)**
-- Core equity -8%, small-cap/PSU -15% → equity drops to ₹6,34K
-- Total portfolio: ₹12,65,342 (-5.0%)
-- **Verdict:** Goal requires 40.4% return over 13 months from ₹12.65L base — NOT FEASIBLE under low-risk mandate. User must reassess goal/timeline if this scenario occurs.
-
-### Known Weaknesses Pre-emptively Flagged
-
-1. **Timing risk:** Selling BSE (+114%) and CUMMINSIND (+53%) into strength — could rally further
-2. **Loss crystallization:** Exiting PRAJ and BAJAJHFL realizes ₹14,321 in losses without waiting for recovery
-3. **Equity still high at 52.6%:** Another phase of de-risking needed by August 2026
-4. **No tax-loss harvesting optimization:** Exits not staged across financial years (₹2,457 STCG tax could have been deferred)
-
-### Strategist's Plan B
-
-**Staged Exits (if primary plan vetoed):**
-- Day 1: Sell BAJAJHFL + PRAJIND → partial liquidity (76.3% compliant)
-- Day 3: Sell 50% of BSE → observe rally continuation
-- Day 5: Sell CUMMINSIND
-- Day 7: Sell remaining 50% of BSE → full compliance
-
-**Trade-off:** Lower timing risk but delayed liquidity compliance by 6 days.
+**Strategist's Recommendation:** Primary plan balances all constraints.
 
 ---
 
-## Section 3: Risk Officer Verdict
+## Risk Officer Verdict Summary
 
-**Full verdict:** `workspace/verdict-2026-05-25.md`
+**From:** `workspace/verdict-2026-05-25.md`
 
-### Verdict: **APPROVE** (with one required amendment)
+### Verdict: APPROVE WITH RESERVATIONS
 
-**Summary:** Proposal restores liquidity compliance and initiates de-risking; timing risks acknowledged but acceptable given the 13-month capital-preservation mandate.
+**One-line summary:** Proposal passes all 7 Hard Rules and materially improves liquidity compliance (72.9% → 95.0%) while de-risking equity allocation (66.5% → 52.4%) for the 13-month capital-preservation horizon; approved despite timing risk on profit-booking and incomplete liquidity restoration.
 
-### Hard Rule Compliance Check (All 7 PASS ✅)
+### Hard Rules Compliance: 7/7 PASS ✅
+1. **Goal commitment:** PASS — All actions protect corpus for ₹40L goal
+2. **Concentration cap (15%):** PASS — MUTHOOTFIN 10.08% post-rebalance, stress-tested to 20% surge (no breach)
+3. **Liquidity / capital-safe glide path:** PASS — 22.1pp improvement, equity de-risked 14.16pp
+4. **No new debt/leverage:** PASS — Zero margin/borrowing
+5. **No speculative instruments:** PASS — Exits reduce speculative exposure
+6. **Capital preservation priority:** PASS — Exits losers, books overvalued gains
+7. **No illiquid/penny stocks:** PASS — BAJAJHFL/PRAJIND exited
 
-1. ✅ **Goal commitment:** Capital preservation focus appropriate; forward plan documents glide path
-2. ✅ **Concentration cap (15%):** MUTHOOTFIN post-rebalance 13.4% (under cap); stress test confirms no breach
-3. ✅ **Liquidity / capital-safe glide path:** Buffer restored 72.9% → 106.8%; equity reduced 66.5% → 52.6%
-4. ✅ **No new debt/leverage:** Zero margin/borrowing
-5. ✅ **No speculative instruments:** Exits reduce speculation; no crypto/F&O/forex
-6. ✅ **Capital preservation priority:** Exits reduce downside risk; equity reduction lowers volatility
-7. ✅ **No illiquid/penny stocks:** PRAJ and BAJAJHFL (illiquid) exited; none added
+### Soft Rules Compliance: 2 STRONG PASS, 2 PARTIAL
+- **SR #1 (De-risk into stability):** STRONG PASS — ₹1.14L equity → FD
+- **SR #2 (Diversified instruments):** PARTIAL — FD is single instrument (mitigated by June debt fund deployment)
+- **SR #3 (Frequent review):** PASS — Monthly cadence maintained
+- **SR #4 (Tax / cost awareness):** PARTIAL — STCG flagged, loss-offset applied, but not staged across FYs
 
-### Soft Rule Compliance
+### The Good (Risk Officer's approval reasoning)
+1. **Material liquidity improvement** — 22.1pp gain urgent for emergency-fund deficiency
+2. **Disciplined loss-cutting** — BAJAJHFL/PRAJIND have no 13-month recovery visibility; holding = sunk-cost fallacy
+3. **Overvaluation recognition** — BSE PE 81 is 3× NIFTY; booking +115% gain before reversion is prudent
+4. **Phased de-risking** — 52.4% equity is Phase 1; forward plan shows tranches to 20-25% by March 2027
+5. **Strategist honesty** — Weaknesses section transparent; no over-selling
+6. **Stress tests pass** — All 4 scenarios remain compliant; Scenario C marginal but acceptable
 
-- ✅ **De-risk into stability:** Rotation from equity (overvalued + underwater) to FD (capital-safe)
-- ✅ **Preference for diversified instruments:** Forward plan prioritizes NIFTYBEES + debt funds
-- ✅ **Frequent review:** Next session July 1, 2026 (6 weeks); quarterly checkpoints
-- ⚠️ **Tax / cost awareness:** STCG tax flagged; loss-offset applied; but exits not staged across FYs (acceptable trade-off for liquidity urgency)
+### The Concerns (Why "WITH RESERVATIONS")
+1. **Timing risk** — Selling into momentum (NIFTY +0.51%, VIX -6.7%, risk-on market) could mean missing 10-20% rally in BSE/CUMMINS
+   - **Risk Officer's judgment:** 13-month horizon + Hard Rule #6 (capital preservation > growth) overrides "wait for the top" instinct
+2. **Loss crystallization** — ₹14,321 realized losses without recovery attempt
+   - **Risk Officer's judgment:** Recovery in 13 months is speculative; FD's 6-7% guaranteed return better aligns with Low risk profile
+3. **Liquidity still 5% short** — ₹27K gap remains
+   - **Risk Officer's judgment:** ₹27K = 1.5% of monthly surplus; June SIP can close; material improvement (22.1pp) outweighs perfect compliance cost
+4. **Equity still aggressive at 52.4%** — Not yet "substantially capital-safe" for Q2 2027 target
+   - **Risk Officer's judgment:** Phase 1 of glide path; forward plan shows monthly tranches to 20-30% by March 2027
 
-### Adversarial Concerns (Challenged but Accepted)
+### What Risk Officer is NOT Approving (would trigger VETO)
+1. "52.4% equity is the final state" — NO, forward plan must execute
+2. "We'll hold BSE if it keeps rallying" — NO, execute at ₹4,280 or walk away
+3. "BAJAJHFL/PRAJIND might recover so let's wait" — NO, exits happen May 25-29
+4. "Liquidity gap can wait" — NO, June surplus must deploy ₹30K to FD
 
-1. **Timing Risk (Selling Into Strength):** BSE at +114%, CUMMINSIND at +53% could rally further. Risk Officer accepts because valuation metrics (BSE PE 81.1, CUMMINSIND weak fundamentals) indicate reversal risk > opportunity. Hard Rule #6 (capital preservation) prioritizes booking gains over chasing peaks.
+### Plan B Assessment (Risk Officer reviewed Strategist's 3 options)
+- **Option 1 (Staged):** REJECT — Delays liquidity compliance; VIX -6.7% today = exact time to sell, not wait
+- **Option 2 (Ultra-conservative):** REJECT — Liquidity 79.9% still deficient; BSE PE 81 not a "conviction hold"
+- **Option 3 (Aggressive):** CONDITIONAL ACCEPT — Only if user risk tolerance decreased (job loss, medical, etc.)
 
-2. **Loss Crystallization (₹14,321):** Exiting PRAJ and BAJAJHFL realizes losses without recovery catalyst. Risk Officer accepts because 13-month horizon doesn't allow multi-year turnaround holds. Sunk-cost fallacy avoided. Freed capital compounds in debt at 6-7% guaranteed.
+**Risk Officer's Counter Plan B:** Hybrid (Primary + IREDA exit) → 99.6% liquidity, 49% equity; use if 100% compliance demanded today
 
-3. **Equity Still High at 52.6%:** User_plan.md requires corpus "substantially capital-safe by Q2 2027" (March = 10 months). 52.6% equity exposes ₹1.10L to -15% correction. Risk Officer accepts phased approach BUT requires amendment.
+### Execution Conditions (11 mandates)
+1. LIMIT orders only (no market orders)
+2. Execution window May 25-27 (no delays)
+3. FD transfer confirmed before June 25 session
+4. holdings.json updated to 27 positions post-settlement
+5. **June 2026:** Close ₹27K liquidity gap (₹30K from June surplus → FD)
+6. **June 2026:** Phase 2 de-risking to 45% equity (trim ₹70-80K)
+7. **June 2026:** Deploy ₹1-1.2L to liquid/debt fund (diversify from FD)
+8. **Emergency trigger:** NIFTY drops >10% in one week → exit ₹50-80K equity immediately
+9. **Emergency trigger:** VIX > 25 for 3+ days → review PSU/momentum positions
+10. **Emergency trigger:** Portfolio < ₹12.5L → emergency session
+11. **Emergency trigger:** Life event (job loss, medical, windfall) → reconvene immediately
 
-4. **No Tax-Loss Harvesting:** ₹2,457 STCG tax could have been deferred by staging exits across FYs. Risk Officer accepts subordination to Hard Rule #3 liquidity urgency.
+### Stress Test Review (Risk Officer ran independent scenarios)
+- **Scenario A-D:** Agree with Strategist (3 PASS, 1 MARGINAL)
+- **Scenario E (Stagflation):** Risk Officer added this — if equity returns 0% for 12 months, goal shortfall ₹5.07L (goal NOT MET); tail risk, not a veto reason but documented
 
-5. **Goal Attainability Under Stress:** Scenario C (combined shock) makes ₹40L goal unreachable. Risk Officer acknowledges this inherits from user's current state, not caused by rebalance. Rebalance *reduces* risk.
-
-### Required Amendment
-
-**Risk Officer added one mandatory change before approval:**
-
-> **Emergency De-Risking Trigger:** If NIFTY drops >8% in any single week before July 2026 session, convene emergency rebalance within 48 hours to trim equity from 52.6% to 40-45%. Do NOT wait for scheduled session — market velocity risk requires immediate response.
-
-**Rationale:** Phased de-risking (52.6% → 40-45% by August 2026) assumes moderate market. A sudden >8% NIFTY drop erases ~₹56K from equity and consumes liquidity buffer headroom. Trigger protects against this vulnerability.
-
-### Risk Officer's Plan B (Even Though Approved)
-
-**Staged Exits Over 7 Days:**
-- Day 1: Sell BAJAJHFL + PRAJIND (losers first) → 76.3% liquidity compliance
-- Day 3: Sell 50% BSE (partial winner exit)
-- Day 5: Sell CUMMINSIND
-- Day 7: Sell remaining 50% BSE → 101.1% compliance
-
-**Effect:** Lower timing risk (observe BSE rally) but delayed full compliance by 6 days.
-
-**Risk Officer's Judgment:** Primary plan (immediate compliance) outweighs timing risk in capital-preservation scenario. But user can opt for Plan B if uncomfortable selling BSE at current peak.
-
-### Approval Conditions Summary
-
-1. ✅ Primary proposal (6 sells + 1 FD deposit) APPROVED as specified
-2. ✅ Forward Plan APPROVED with emergency de-risking trigger amendment
-3. ⚠️ Post-exit monitoring required: Track BSE, CUMMINS, PRAJ, BAJAJHFL for 90 days; if any position rallies >15% or recovers to break-even, document as learning data
-4. ⚠️ Tax trade-off must be stated in final report: User should know ₹2,457 tax could have been deferred
-5. ⚠️ Goal attainability contingency: If portfolio drops below ₹12L at any session, reassess goal/timeline/contributions
-
-**Risk Officer's Personal Note (off-the-record):**
-> This proposal is competent and disciplined. Strategist correctly prioritizes liquidity + capital preservation over growth, aligning with 13-month horizon and low-risk mandate. Adversarial concerns (timing, loss crystallization, 52.6% equity) are judgment calls where reasonable people can disagree — Strategist's justifications are sound. The single amendment (emergency trigger) is a prudent safeguard, not a material flaw. If I were managing my own money with this goal and horizon, I would execute the primary plan. **Approved. Execute.**
+**Risk Officer Confidence in Verdict:** 85% (reservations around timing risk, but Hard Rules compliance + stress resilience outweigh)
 
 ---
 
-## Section 4: Execution Orders
+## Execution Orders Summary
 
-**Full order list:** `workspace/orders-2026-05-25.md`
+**From:** `workspace/orders-2026-05-25.md`
 
-### Order Summary (Broker-Ready)
+### Broker-Ready Orders (6 LIMIT orders)
 
-**Execute today: May 25, 2026, between 9:15 AM - 3:30 PM IST**
+| # | Symbol | Action | Qty | Target Price | Proceeds | Order Type | Valid Through |
+|---|--------|--------|-----|--------------|----------|------------|---------------|
+| 1 | BAJAJHFL | SELL | 121 | ₹83.00 | ₹10,043 | LIMIT | May 27, 2026 |
+| 2 | PRAJIND | SELL | 22 | ₹393.00 | ₹8,646 | LIMIT | May 27, 2026 |
+| 3 | BSE | SELL | 11 | ₹4,280.00 | ₹47,080 | LIMIT | May 27, 2026 |
+| 4 | CUMMINSIND | SELL | 3 | ₹5,370.00 | ₹16,110 | LIMIT | May 27, 2026 |
+| 5 | MIDCAP | SELL | 1,000 | ₹18.00 | ₹18,000 | LIMIT | May 27, 2026 |
+| 6 | SMALLCAP | SELL | 300 | ₹45.50 | ₹13,650 | LIMIT | May 27, 2026 |
 
-| Order # | Action | Symbol | Qty | Order Type | LIMIT Price | Estimated Proceeds | Rationale |
-|---------|--------|--------|-----|------------|-------------|-------------------|-----------|
-| 1 | SELL | BAJAJHFL | 121 | LIMIT | ₹82.50 | ₹9,983 | Exit -44.5% loss position |
-| 2 | SELL | PRAJIND | 22 | LIMIT | ₹391.00 | ₹8,602 | Exit -41.9% loss position |
-| 3 | SELL | BSE | 11 | LIMIT | ₹4,240.00 | ₹46,640 | Book +114% gain; overvalued |
-| 4 | SELL | CUMMINSIND | 3 | LIMIT | ₹5,315.00 | ₹15,945 | Book +53% gain; weak fundamentals |
-| 5 | SELL | MIDCAP | 1000 | LIMIT | ₹17.82 | ₹17,820 | Trim high-volatility mid-cap ETF |
-| 6 | SELL | SMALLCAP | 300 | LIMIT | ₹45.06 | ₹13,595 | Trim high-volatility small-cap ETF |
+**Total proceeds:** ₹1,13,529  
+**STCG tax:** ₹2,782 (15% on net gains after loss offset)  
+**Net to FD:** ₹1,10,747
 
-**Total Estimated Proceeds:** ₹1,12,585 (at conservative LIMIT prices; proposal target ₹1,85,571 at current market)
+### Execution Sequencing
+1. **Loss cuts first (Orders 1-2):** Generate ₹14,370 tax loss offset → reduces STCG on profit books
+2. **Profit books (Orders 3-4):** BSE +115%, CUMMINS +54% → book gains while market is risk-on
+3. **ETF trims last (Orders 5-6):** MIDCAP/SMALLCAP volatility reduction
 
-**Net Tax Impact:** ₹2,777 estimated STCG (gains offset losses)
+### Timing Guidance
+- **Best window:** 10:30 AM - 2:00 PM IST (avoid opening/closing volatility)
+- **Market conditions today:** NIFTY +0.51%, VIX -6.7%, broad rally → favorable for selling
+- **Deadline:** May 27, 2026 (all orders must be placed by then per Risk mandate)
 
-### Execution Sequence Logic
+### Manual Steps (No Broker API in MVP)
+1. Log into Zerodha/Groww/Upstox
+2. Place 6 LIMIT orders (copy prices from table above)
+3. Monitor fills May 25-27
+4. Confirm settlement in trading account (T+1 to T+2, May 26-28)
+5. Transfer ₹1,13,529 to Fixed Deposit (before May 31)
+6. Update `data/holdings.json` to 27 positions:
+   - Remove: BSE, BAJAJHFL, PRAJIND, CUMMINSIND
+   - Update: MIDCAP 3053 → 2053, SMALLCAP 950 → 650
+7. Run reconciliation: `python scripts/reconcile_holdings.py`
 
-1. **Orders 1-2 (loss-cuts first):** Place BAJAJHFL + PRAJIND sells at market open (9:15 AM) — priority to free capital from underwater positions
-2. **Orders 3-4 (winners mid-session):** Place BSE + CUMMINSIND sells around 11:00 AM after observing opening momentum
-3. **Orders 5-6 (ETFs last):** Place MIDCAP + SMALLCAP sells around 2:00 PM (ETFs have better liquidity late-session)
-
-### Market Timing Flag
-
-**Favorable conditions as of 7:18 AM IST:**
-- NIFTY +0.08%, broad rally, VIX 17.01 (moderate)
-- Bank Nifty +1.74% (strong)
-- Execution conditions supportive for sell orders
-
-### Post-Execution Protocol
-
-**Within 48 hours (by May 27, 2026):**
-1. ✅ Confirm all 6 orders filled (check broker app at T+1 settlement)
-2. ✅ Transfer ₹1,12,585 (or actual proceeds) to Fixed Deposit
-3. ✅ Update `data/holdings.json` or run reconciliation: `gitclaw --prompt 'Reconcile session 2026-05-25'`
-4. ✅ Verify liquidity buffer: Cash + FD should be ≥ ₹5,46,000
-5. ✅ Save broker contract notes (PDF) to `workspace/contracts/2026-05-25/`
-6. ✅ Run `gitclaw --prompt 'Post-execution audit 2026-05-25'` for audit trail
-
-**Day-8 Protocol (if any LIMIT orders unfilled by May 29):**
-- Losers (BAJAJHFL, PRAJIND): Convert to MARKET order (exit at any price)
-- Winners (BSE, CUMMINSIND): Re-evaluate — if still overvalued, convert to MARKET; if corrected, hold for next session
-- ETFs (MIDCAP, SMALLCAP): Convert to MARKET (high liquidity)
+### Risk Warnings (What Could Prevent Success)
+1. **Delay beyond May 27** — Liquidity deficiency remains urgent; every day delayed = emergency-fund risk
+2. **LIMIT orders not filling** — If BSE/CUMMINS rally past target prices, orders won't execute; DO NOT chase higher (Risk Officer mandate)
+3. **Broker restrictions** — Some brokers flag "excessive selling" or freeze accounts for anti-money-laundering review
+4. **Market crash during execution** — If NIFTY drops >3% intraday, LIMIT orders may not fill at targets (user's choice: lower targets or wait)
+5. **Changing mind on BSE** — User sees BSE hit ₹4,500 and regrets selling at ₹4,280; DO NOT cancel order (Hard Rule #6: preservation > growth)
 
 ---
 
 ## Forward Plan
 
-**Next review due:** July 1, 2026 (in ~37 days)
+**Next review due:** June 25, 2026 (in ~30 days)
 
-### Immediate (Week 1 - Post-Execution)
+### Immediate (Post-Execution, May 26-31)
+- Confirm ₹1.14L in trading account (settlement T+1 to T+2)
+- Transfer full proceeds to Fixed Deposit
+- Update holdings file to 27 positions
+- Verify liquidity buffer: ₹5.19L / ₹5.46L = 95.0% compliant (₹27K short)
 
-1. Execute 6 sell orders (May 25, 2026) → Conservative proceeds ₹1,12,585
-2. Transfer proceeds to Fixed Deposit (May 27, T+1 settlement)
-3. Confirm liquidity buffer: ₹5,10,585 (93.5% compliant at conservative proceeds; 106.8% at target proceeds)
-4. Update holdings in `data/holdings.json` or via reconciliation
+### June 2026 Session (Next Monthly Rebalance)
+**Priority:** Close liquidity gap + Phase 2 de-risking
 
-### Month 1-2 (June-July 2026)
+**Monthly SIP deployment (₹1.80L):**
+- ₹30,000 → FD (close ₹27K liquidity gap to 100% compliance)
+- ₹1,00,000 → Liquid/Short-Duration Debt Fund (capital-safe, T+1 redemption, low-cost)
+- ₹50,000 → NIFTYBEES or TOP100CASE SIP (maintain large-cap equity core)
 
-5. **Deploy monthly surplus (₹1,80,000/month) as follows:**
-   - ₹1,20,000 (67%) → Debt Mutual Fund (liquid fund or short-duration; capital-safe, T+1 redemption)
-   - ₹60,000 (33%) → Continue equity SIP (NIFTYBEES or TOP100CASE; diversified large-cap core)
-   - **Rationale:** 67% of new money into debt accelerates glide path toward capital-safe allocation
+**Additional equity trim (₹70-80K):**
+- Candidates: IREDA (-29.5%), IPL (-20.3%), PENIND (-35.0%), ADANIGREEN (-15.6%)
+- Target: Equity 52.4% → 45% (Phase 2 of glide path)
 
-6. **Next rebalance session:** July 1, 2026 (6 weeks from today)
-   - **Agenda:** Evaluate further equity reduction (target: 40-45% by August 2026)
-   - **Candidates for next trim:** Remaining MIDCAP (2,053 units), remaining SMALLCAP (650 units), IREDA (down 28.9%), any position that rallies into overvaluation
+**Soft Rule #2 compliance:** Deploy debt fund (diversify beyond FD single instrument)
 
-### Month 3-6 (August-November 2026)
+### July-August 2026
+- Continue debt accumulation: 70% monthly surplus (₹1.26L) → debt, 30% (₹54K) → equity SIP
+- Review precious metals: GOLDBEES/SILVERBEES 9% of portfolio; if at all-time highs, consider 30-40% profit-booking (₹30K to debt)
 
-7. **Accelerate debt allocation:** Shift monthly deployment ratio to 80% debt / 20% equity (₹1,44,000 debt, ₹36,000 equity per month)
-8. **Review precious metals:** GOLDBEES + SILVERBEES are 9.1% of post-rebalance portfolio; if gold remains at all-time highs, consider partial profit-booking (move ₹30-40K to debt)
+### September-November 2026 (Q3 2026)
+- Accelerate glide path: 80% monthly surplus to debt (₹1.44L), 20% to equity (₹36K)
+- Target: Equity 45% → 35% by November 2026 (6 months before goal)
 
-### Month 7-10 (December 2026 - March 2027)
+### December 2026 - March 2027 (Final Glide Path)
+- Deploy 100% monthly surplus into liquid/debt (ZERO new equity)
+- Exit remaining small-cap/mid-cap/PSU: JPPOWER, TRANSRAILL, MAZDOCK, ENGINERSIN
+- Target: Equity 35% → 20-25% by March 2027 (Q2 2027 "substantially capital-safe" milestone per user_plan.md)
 
-9. **Final glide-path phase:** Deploy 100% of monthly surplus into liquid/debt instruments (zero new equity)
-10. **Target allocation by March 2027:** 20% equity, 75% debt/liquid, 5% gold
-11. **Begin corpus consolidation:** Move FDs and debt fund units into single liquid fund for easy withdrawal
+### April-June 2027 (Final 3 Months Before Goal)
+- **Capital preservation mode:** No new equity purchases
+- Exit all equity except ultra-liquid large-cap (NIFTYBEES, TOP100CASE, ICICIBANK)
+- Move corpus to liquid fund with T+0 redemption (IDFC Cash Fund, Aditya Birla Savings Fund)
+- **By June 1, 2027:** 100% corpus in savings account or T+0 liquid fund (₹40L instantly accessible for house down-payment)
 
-### Month 11-13 (April-June 2027)
+### Emergency Session Triggers (Reconvene Immediately If Any Occur)
+- NIFTY drops >10% in any single week
+- VIX spikes above 25 for 3+ consecutive days
+- MUTHOOTFIN or any position crosses 13% concentration
+- Liquidity buffer drops below ₹5L
+- Portfolio value drops below ₹12.5L
+- Life event: job loss, medical emergency, windfall bonus, risk tolerance change
 
-12. **Capital preservation mode:** No new equity purchases; all surplus into liquid fund
-13. **Final rebalance (May 2027):** Exit remaining equity 4-6 weeks before house purchase; move 100% to savings account or liquid fund with T+0 redemption
-14. **Withdrawal readiness:** By June 1, 2027, entire ₹40L corpus must be instantly accessible (savings or liquid fund with same-day redemption)
-
-### Monitoring Triggers (Red Flags for Emergency Rebalance)
-
-- **NIFTY drops >8% in any single week** → Emergency session within 48 hours to trim equity to 40-45% (Risk Officer mandatory amendment)
-- **Top position (MUTHOOTFIN or any other) crosses 13.5%** → Trim to restore diversification
-- **Liquidity buffer drops below ₹5L due to market decline** → Sell equity to restore buffer
-- **Any single position declines >25% from current value** → Reassess hold vs. exit
-- **Portfolio value drops below ₹12L** → Emergency discussion with user to reassess goal amount, timeline, or contributions
+**Come back sooner if:** Major market correction, VIX spike, life change, windfall
 
 ---
 
-## Compliance Statement
+## Session Artifacts (For Audit Trail)
 
+All source documents committed to git (local only, no push per orchestrator config):
+
+1. **Analysis:** `workspace/analysis-2026-05-25.md` (Analyst, 159 lines, 11:49 AM IST live data)
+2. **Proposal:** `workspace/proposal-2026-05-25.md` (Strategist, 322 lines, 6 exits + stress tests)
+3. **Verdict:** `workspace/verdict-2026-05-25.md` (Risk Officer, 297 lines, APPROVE with 11 conditions)
+4. **Orders:** `workspace/orders-2026-05-25.md` (Execution, 298 lines, 6 LIMIT orders with manual steps)
+5. **Report:** `reports/2026-05-25-rebalance.md` (this file, Orchestrator assembly)
+
+**Git commit signature (pending):**
+```
+Rebalance 2026-05-25: Restore liquidity (72.9%→95%), de-risk equity (66.5%→52.4%) — APPROVED (Onboarding/A/S/R/E)
+```
+
+**Compliance disclaimer (verbatim, load-bearing for audit trail):**
 > **Not investment advice.** This report is the output of an open-source research / educational tool that simulates a multi-agent governance flow. It is **not** issued by a SEBI-registered investment adviser or research analyst. Outputs are illustrations of how the Council reasons, not personalized recommendations. Consult a SEBI RIA before acting. Past performance ≠ future results.
 
 ---
 
-## Session Metadata
+## Agent Sign-Offs
 
-- **Session Date:** 2026-05-25
-- **Session Type:** REBALANCE
-- **Verdict:** APPROVED (with amendment: emergency de-risking trigger)
-- **Artifacts Generated:**
-  - Analysis: `workspace/analysis-2026-05-25.md` (12KB)
-  - Proposal: `workspace/proposal-2026-05-25.md` (19KB)
-  - Verdict: `workspace/verdict-2026-05-25.md` (16KB)
-  - Orders: `workspace/orders-2026-05-25.md` (15KB)
-  - Final Report: `reports/2026-05-25-rebalance.md` (this file)
+- **Analyst:** Observation complete (11:49 AM IST, 29 positions analyzed, liquidity deficiency flagged)
+- **Strategist:** Proposal submitted (6 exits, ₹1.14L to FD, all 7 Hard Rules cited, stress-tested 4 scenarios)
+- **Risk Officer:** APPROVED WITH RESERVATIONS (7/7 Hard Rules PASS, 85% confidence, 11 execution conditions)
+- **Execution:** Orders generated (6 LIMIT orders, May 25-27 window, manual placement instructions)
+- **Orchestrator:** Report assembled, ready for commit
 
-**Agent Sign-Off:**
-- ✅ Analyst: Observed current state; flagged liquidity deficiency, equity-horizon mismatch, deep losses, overvalued winners
-- ✅ Strategist: Proposed 6 sells + FD deposit; cited all relevant rules; stress-tested; pre-empted weaknesses; provided Plan B
-- ✅ Risk Officer: Challenged timing risk, loss crystallization, elevated equity, tax optimization; verified all 7 Hard Rules PASS; added emergency trigger amendment; **APPROVED**
-- ✅ Execution: Generated 6 broker-ready orders with conservative LIMIT prices, execution sequence, post-execution checklist
-
-**Orchestrator:** Session complete. Commit pending user execution confirmation.
+**Session Status:** COMPLETE — Ready for user execution (no broker API, manual order placement)
 
 ---
 
-**End of Report**
+**Session End:** 2026-05-25  
+**Next Session:** June 25, 2026  
+**Orchestrator Confidence:** Session flow executed per protocol; all 4 agents completed; Risk approval obtained; orders ready for user manual execution.
