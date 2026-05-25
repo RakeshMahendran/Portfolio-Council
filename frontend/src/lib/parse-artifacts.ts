@@ -113,19 +113,12 @@ export function parseAnalyst(md: string): AnalystParsed {
     md.match(/Total\s*Portfolio[*\s]*\|?[*\s]*₹?\s*([\d,]+(?:\.\d+)?)/i);
   const parsedTotal = totalMatch ? parseInr("₹" + totalMatch[1]) : null;
 
-  // Composition rows. Order patterns most-specific first.
+  // Composition rows. Try the authoritative asset-class TABLE first (its
+  // summary rows reconcile to the stated TOTAL PORTFOLIO), then fall back to
+  // prose "Label: ₹X" lines below. Table-first matters because some analyses
+  // ALSO carry a PARTIAL prose breakdown (e.g. only Cash + FD) that would
+  // otherwise win and under-count the portfolio.
   const composition: AnalystComposition[] = [];
-  for (const { label, kind, regex } of COMPOSITION_PATTERNS) {
-    const m = md.match(regex);
-    if (m) {
-      // Use the captured number, not the whole match — the label text can
-      // contain commas/digits that would mislead parseInr.
-      const amount = parseInr("₹" + m[1]);
-      if (amount !== null && amount > 0) {
-        composition.push({ label, amount, kind });
-      }
-    }
-  }
 
   // Header-driven asset-class summary table. Some analyses present the whole
   // breakdown as one wide holdings table whose final rows summarise the asset
@@ -139,7 +132,7 @@ export function parseAnalyst(md: string): AnalystParsed {
   // We locate the value column from the header, then read it from the
   // asset-class summary rows only (\b stops "Gold" matching a "GOLDBEES" stock).
   let tableTotal: number | null = null;
-  if (composition.length === 0) {
+  {
     const lines = md.split("\n");
     const cellsOf = (line: string) => line.split("|").map((c) => c.trim());
     let valueCol = -1;
@@ -180,6 +173,21 @@ export function parseAnalyst(md: string): AnalystParsed {
         if (!matched) continue;
         const [, kind, label] = matched;
         composition.push({ label, amount, kind });
+      }
+    }
+  }
+
+  // Prose fallback — "Equity portfolio: ₹X", "Cash / Savings: ₹X", etc. Only
+  // runs when the table yielded nothing, so a partial prose breakdown can't
+  // win over the authoritative asset-class table above.
+  if (composition.length === 0) {
+    for (const { label, kind, regex } of COMPOSITION_PATTERNS) {
+      const m = md.match(regex);
+      if (m) {
+        const amount = parseInr("₹" + m[1]);
+        if (amount !== null && amount > 0) {
+          composition.push({ label, amount, kind });
+        }
       }
     }
   }
@@ -974,7 +982,7 @@ export function parseTargetAllocation(md: string): TargetPosition[] {
   // Scope to the first "Post-...State" / "Resulting Allocation" block so we
   // don't blend the 6-month projection into the immediate snapshot.
   const stateMatch = md.match(
-    /###?\s*(?:Post-?[\w-]*\s*State|Resulting\s*Allocation|After\s*Deployment|After\s*Rebalance|Target\s*Mix)[^\n]*\n([\s\S]*?)(?:\n###?\s|\n##\s|$)/i,
+    /###?\s*(?:Post-?[\w-]*\s*State|Resulting\s*Allocation|After\s*Deployment|After\s*Rebalance|After\s*\([^)]*\)|Target\s*Mix)[^\n]*\n([\s\S]*?)(?:\n###?\s|\n##\s|$)/i,
   );
   if (stateMatch) {
     const block = stateMatch[1];
@@ -986,10 +994,13 @@ export function parseTargetAllocation(md: string): TargetPosition[] {
       seen.add(key);
       out.push({ symbol: label, amount: amount ?? 0, pct });
     };
+    // Allow a parenthetical between the label and the colon, e.g.
+    // "Equity (stocks + ETFs):" or "Liquid (Cash + FD):".
+    const LBL = `${LABEL}\\*{0,2}(?:\\s*\\([^)]*\\))?`;
     // (B1) "pct-first" form: "- Equity: ~15% (NIFTYBEES ₹1.5L)"
-    const pctFirst = new RegExp(`[-*]\\s*\\*{0,2}${LABEL}\\*{0,2}\\s*:\\s*~?\\s*([\\d.]+)\\s*%\\s*(?:\\(([^)]*)\\))?`, "gi");
-    // (B2) "amount-first" form: "- **Equity:** ₹8,87,079 (59.03%)"
-    const amtFirst = new RegExp(`[-*]\\s*\\*{0,2}${LABEL}\\*{0,2}\\s*:\\s*\\*{0,2}\\s*₹\\s*([\\d,.]+)[^()\\n]*\\(\\s*([\\d.]+)\\s*%`, "gi");
+    const pctFirst = new RegExp(`[-*]\\s*\\*{0,2}${LBL}\\s*:\\s*~?\\s*([\\d.]+)\\s*%\\s*(?:\\(([^)]*)\\))?`, "gi");
+    // (B2) "amount-first" form: "- **Equity:** ₹8,87,079 (59.03%)" / "- **Equity (stocks + ETFs):** ₹7,01,217 (52.6%)"
+    const amtFirst = new RegExp(`[-*]\\s*\\*{0,2}${LBL}\\s*:\\s*\\*{0,2}\\s*₹\\s*([\\d,.]+)[^()\\n]*\\(\\s*([\\d.]+)\\s*%`, "gi");
     let m;
     while ((m = pctFirst.exec(block)) !== null) {
       push(m[1].trim(), Number(m[2]), m[3] ? parseInr(m[3]) : null);

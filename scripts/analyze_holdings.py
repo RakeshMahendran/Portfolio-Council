@@ -70,7 +70,16 @@ for h in holdings:
         hist = t.history(period="1y")
         hist3 = t.history(period="3y")
         if len(hist) < 20:
-            print(f"{sym}: insufficient data")
+            # Don't DROP the holding — that under-counts the portfolio. Keep it,
+            # valued at cost basis, clearly flagged as a fallback.
+            cur_val = h["qty"] * h["avg"]
+            results.append({
+                "sym": sym, "qty": h["qty"], "avg": h["avg"], "cmp": round(h["avg"], 2),
+                "inv": h["qty"] * h["avg"], "cur_val": round(cur_val, 0), "pnl": 0,
+                "pnl_pct": 0.0, "action": "HOLD", "reasons": "",
+                "price_source": "cost basis (live price unavailable)",
+            })
+            print(f'{sym:14s} CMP:{h["avg"]:>9.2f} (cost basis — insufficient live data)')
             continue
         cmp = float(hist["Close"].iloc[-1])
         pnl_pct = ((cmp - h["avg"]) / h["avg"]) * 100
@@ -196,9 +205,31 @@ for h in holdings:
         results.append(r)
         print(f'{sym:14s} CMP:{cmp:>9.2f} P/L:{pnl_pct:>+7.1f}% | OPM:{opm:>5.1f}% NPM:{npm:>5.1f}% ROE:{roe:>5.1f}% D/E:{de:>6.1f} | PE:{trail_pe:>6.1f} RSI:{rsi:>5.1f} | Val:{val_verdict:>7s} | {action} {("-- " + "; ".join(reasons)) if reasons else ""}')
     except Exception as e:
-        print(f"{sym}: ERROR - {e}")
+        # Keep the holding at cost basis rather than dropping it (which would
+        # silently under-count equity and make the portfolio total wrong).
+        cur_val = h["qty"] * h["avg"]
+        results.append({
+            "sym": sym, "qty": h["qty"], "avg": h["avg"], "cmp": round(h["avg"], 2),
+            "inv": h["qty"] * h["avg"], "cur_val": round(cur_val, 0), "pnl": 0,
+            "pnl_pct": 0.0, "action": "HOLD", "reasons": "",
+            "price_source": "cost basis (fetch failed)",
+        })
+        print(f'{sym:14s} CMP:{h["avg"]:>9.2f} (cost basis — fetch failed: {str(e)[:50]})')
 
 out = os.path.join(os.path.dirname(__file__), "portfolio_data", "holdings_analysis.json")
+os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as f:
     json.dump(results, f, indent=2)
+
+# Explicit, authoritative totals so the Analyst agent uses these figures
+# verbatim instead of inferring a higher (fabricated) equity number.
+total_equity = sum(r.get("cur_val", 0) for r in results)
+n_live = sum(1 for r in results if not r.get("price_source"))
+n_fallback = len(results) - n_live
+print(f"\n=== PORTFOLIO TOTALS (authoritative — use these exact figures) ===")
+print(f"Holdings counted: {len(results)} of {len(holdings)} "
+      f"(live-priced: {n_live}, cost-basis fallback: {n_fallback})")
+print(f"TOTAL EQUITY (sum of all holding current values): Rs {total_equity:,.0f}")
+print("RULE: Equity total = the sum above. Do NOT report a higher equity figure "
+      "than this; every position is already included (failed fetches use cost basis).")
 print(f"\nSaved {len(results)} holdings to {out}")
