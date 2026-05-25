@@ -163,15 +163,18 @@ Per-user runtime files (`memory/`, `data/`, `workspace/`, `reports/`, `RULES.md`
 
 ---
 
-## Demo flow (~5 min)
+## Demo flow (~4 min)
 
-1. Land at `/` → click **"Try with sample data"** (seeds demo persona).
-2. **`/onboarding`** → say hi; quick-reply through 6–7 short questions. Agent saves `memory/user_plan.md` and generates `RULES.md`.
-3. Auto-forwards to **`/processing`** → checklist of artifacts landing.
-4. Auto-forwards to **`/profile`** → see structured user plan + holdings table.
-5. Click **"Run portfolio review"** → **`/session`** opens with a 2×2 grid: Analyst → Strategist → Risk → Execution, streaming in real time. Watch a verdict get committed.
-6. Open **`/dev`** → git log with VETOED / APPROVED labels. Click any commit to inspect the diff.
-7. Fork a riskier advisor: `/dev` → New branch → edit `agents/risk/SOUL.md` → re-run the session → compare commits.
+1. **Home (`/`)** — the dashboard answers *"what do I do today?"*: **Today's Action** (e.g. "place 7 orders") and the **Roadmap to ₹40L** — from your current corpus + monthly savings, the required return to hit the goal (and whether it's safely reachable).
+2. **Session (`/session/*`)** — open each agent. Every card leads with a plain-English summary:
+   - **Analyst** — composition donut + liquidity gauge (observes; never advises)
+   - **Strategist** — the proposal + target allocation
+   - **Risk Officer** — the verdict badge + 11 rule traffic-lights + Plan B. *This is the moment:* Risk **AMENDed** v1 (not conservative enough), forced v2, then **APPROVED**.
+   - **Execution** — the concrete order list
+3. **Audit trail (`/dev`)** — git log with APPROVED / AMENDED / VETOED labels; click a commit to inspect the diff. The **pre-commit hook** refuses any rebalance commit whose verdict isn't APPROVE — governance at the git layer.
+4. **Fork an advisor** — `git checkout -b aggressive-risk` → edit `agents/risk/SOUL.md` → re-run → compare commits. The advisor is a repo.
+
+> Onboarding (`/onboarding`, one question per turn → writes `user_plan.md` + `RULES.md`) and the **"Try with sample data"** seed are the on-ramp for a fresh clone.
 
 ---
 
