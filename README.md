@@ -4,6 +4,8 @@
 
 Built on **[gitclaw](https://github.com/lyzr/gitclaw)** (Lyzr's GitAgent runtime) for the Lyzr AI hiring challenge: *"Build something with GitAgent that makes us go: okay… this person ships."*
 
+🎬 **[Watch the 4-min demo](ADD_LOOM_OR_YOUTUBE_LINK)** &nbsp;·&nbsp; [Architecture](#architecture) &nbsp;·&nbsp; [Decisions / ADRs](docs/DECISIONS.md) &nbsp;·&nbsp; [Quickstart](#quickstart)
+
 > ⚠️ **Not investment advice.** Portfolio Council is an open-source research / educational tool that simulates a multi-agent governance flow. It is **not** a SEBI-registered investment adviser or research analyst. Outputs are illustrations of how the Council reasons, not personalized recommendations. **Consult a SEBI RIA before making any actual investment decision.** Past performance ≠ future results. The author accepts no liability for outcomes from following any output.
 
 ---
