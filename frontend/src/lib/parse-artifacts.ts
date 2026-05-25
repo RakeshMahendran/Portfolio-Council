@@ -127,7 +127,64 @@ export function parseAnalyst(md: string): AnalystParsed {
     }
   }
 
-  // Fallback — table form:
+  // Header-driven asset-class summary table. Some analyses present the whole
+  // breakdown as one wide holdings table whose final rows summarise the asset
+  // classes, with the rupee figure in a "Current Value" / "Amount" column that
+  // is NOT the second cell:
+  //   | Symbol | Qty | Avg | LTP | Current Value | % of Portfolio | P/L % | P/L INR |
+  //   | **TOTAL EQUITY**    | | | | **10,57,077** | 70.36% | | |
+  //   | Cash/Savings        | | | | 3,08,000      | 20.50% | | |
+  //   | Gold (Augmont)      | | | | 47,771        |  3.18% | | |
+  //   | **TOTAL PORTFOLIO** | | | | **15,02,848** | 100%   | | |
+  // We locate the value column from the header, then read it from the
+  // asset-class summary rows only (\b stops "Gold" matching a "GOLDBEES" stock).
+  let tableTotal: number | null = null;
+  if (composition.length === 0) {
+    const lines = md.split("\n");
+    const cellsOf = (line: string) => line.split("|").map((c) => c.trim());
+    let valueCol = -1;
+    for (const line of lines) {
+      if (!/^\s*\|/.test(line)) continue;
+      const cells = cellsOf(line);
+      const idx = cells.findIndex((c) =>
+        /^(?:current|market)?\s*value$|^amount(?:\s*\(?\s*inr\s*\)?)?$|^value\s*\(?\s*inr\s*\)?$/i.test(c),
+      );
+      if (idx >= 0) {
+        valueCol = idx;
+        break;
+      }
+    }
+    if (valueCol >= 0) {
+      const CLASS_KIND: Array<[RegExp, AnalystComposition["kind"], string]> = [
+        [/^(?:total\s*)?equity\b/i,       "equity", "Equity"],
+        [/^(?:total\s*)?stocks?\b/i,      "equity", "Equity"],
+        [/^mutual\s*funds?\b/i,           "mf",     "Mutual Funds"],
+        [/^cash\b/i,                      "cash",   "Cash"],
+        [/^fixed\s*deposit\b/i,           "fd",     "Fixed Deposit"],
+        [/^gold\b/i,                      "gold",   "Gold / Gold ETF"],
+        [/^bonds?\b/i,                    "bonds",  "Bonds"],
+      ];
+      for (const line of lines) {
+        if (!/^\s*\|/.test(line)) continue;
+        const cells = cellsOf(line);
+        const first = (cells[1] ?? "").replace(/\*/g, "").trim();
+        if (!first) continue;
+        const rawVal = (cells[valueCol] ?? "").replace(/\*/g, "").trim();
+        const amount = parseInr("₹" + rawVal);
+        if (amount === null || amount <= 0) continue;
+        if (/^total\s*portfolio\b/i.test(first)) {
+          tableTotal = amount; // grand total, not a slice
+          continue;
+        }
+        const matched = CLASS_KIND.find(([re]) => re.test(first));
+        if (!matched) continue;
+        const [, kind, label] = matched;
+        composition.push({ label, amount, kind });
+      }
+    }
+  }
+
+  // Fallback — simple two-column table form:
   //   | Fixed Deposit | 10,00,000 | 100.0% |
   //   | Cash          |    50,000 |   5.0% |
   // We accept either ₹-prefixed or bare-digit amounts in the second cell, and
@@ -164,7 +221,9 @@ export function parseAnalyst(md: string): AnalystParsed {
   // ALL assets — not just the equity-only "Total Portfolio Value".
   const compSum = composition.reduce((s, c) => s + c.amount, 0);
   const totalPortfolio =
-    composition.length >= 2 && compSum > 0 ? compSum : parsedTotal;
+    composition.length >= 2 && compSum > 0
+      ? compSum
+      : (parsedTotal ?? tableTotal);
 
   // Concentration cap (Hard Rule #2)
   const capMatch =
