@@ -113,11 +113,17 @@ export function PrescriptionCard() {
   if (loading || !data) return null;
   const hasOrders = data.orders.length > 0 || data.totalDeployment !== null;
   const hasSips = data.sips.length > 0 || data.totalSip !== null;
-  const hasNext = !!data.nextReview.text || data.nextReview.daysFromNow !== null;
+  // The Council reviews on a monthly cadence. When the parsed artifacts don't
+  // carry an explicit next-review date, fall back to session date + 1 calendar
+  // month (e.g. 2026-05-25 → 2026-06-25) so the user always knows when to return.
+  const reviewDays =
+    data.nextReview.daysFromNow ??
+    (data.sessionDate ? daysUntilNextMonth(data.sessionDate) : null);
+  const hasNext = reviewDays !== null;
   if (!hasOrders && !hasSips && !hasNext) return null;
 
   // Compute review due-date from session.date + N days
-  const dueDate = computeDueDate(data.sessionDate, data.nextReview.daysFromNow);
+  const dueDate = computeDueDate(data.sessionDate, reviewDays);
 
   return (
     <section className="rounded-2xl border border-zinc-700/60 bg-zinc-900/60 overflow-hidden">
@@ -175,8 +181,9 @@ export function PrescriptionCard() {
                           {o.symbol}
                         </span>
                         <span className="text-xs text-zinc-400 tabular-nums">
-                          {o.qty}{" "}
-                          {Number(o.qty) === 1 ? "unit" : "units"}
+                          {/^[\d,]+$/.test(o.qty.trim())
+                            ? `${o.qty} ${Number(o.qty.replace(/,/g, "")) === 1 ? "unit" : "units"}`
+                            : o.qty}
                         </span>
                         {o.price && (
                           <span className="text-xs text-zinc-500">
@@ -310,8 +317,8 @@ export function PrescriptionCard() {
                   : "Come back regularly"
             }
             subtitle={
-              data.nextReview.daysFromNow
-                ? `That's ${data.nextReview.daysFromNow} days from this session`
+              reviewDays
+                ? `That's ${reviewDays} days from this session`
                 : null
             }
           >
@@ -343,7 +350,7 @@ export function PrescriptionCard() {
             hasOrders={data.orders.length > 0 || data.totalDeployment !== null}
             sipStartNote={data.sipStartNote}
             futureTranches={data.futureTranches}
-            nextReviewDays={data.nextReview.daysFromNow}
+            nextReviewDays={reviewDays}
           />
         </div>
 
@@ -398,6 +405,17 @@ function RxSection({
       <div className="ml-6">{children}</div>
     </div>
   );
+}
+
+// Day-count from a YYYY-MM-DD session date to the same day-of-month one month
+// later — the Council's monthly review cadence (2026-05-25 → 2026-06-25 = 31).
+function daysUntilNextMonth(sessionDate: string): number | null {
+  const parts = sessionDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!parts) return null;
+  const base = new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+  const next = new Date(base);
+  next.setMonth(next.getMonth() + 1);
+  return Math.round((next.getTime() - base.getTime()) / 86_400_000);
 }
 
 function computeDueDate(

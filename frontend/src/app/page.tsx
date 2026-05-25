@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Eye,
   GitBranch,
+  MessageSquare,
   Play,
   Settings,
   Sparkles,
@@ -250,19 +251,31 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
         {/* ── Product intro — make the dashboard self-explanatory ──────── */}
         <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <BrandMark size={30} />
-            <h1 className="text-lg font-semibold tracking-tight">Portfolio Council</h1>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-400/20 text-teal-300 font-medium">
-              5-agent board
-            </span>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5">
+                <BrandMark size={30} />
+                <h1 className="text-lg font-semibold tracking-tight">Portfolio Council</h1>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-400/20 text-teal-300 font-medium">
+                  5-agent board
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400 leading-relaxed mt-2 max-w-3xl">
+                Your AI investment board. Five specialist agents{" "}
+                <span className="text-zinc-200 font-medium">analyze, debate, and govern</span>{" "}
+                every portfolio decision — the whole deliberation is committed to git as an
+                immutable audit trail.
+              </p>
+            </div>
+            {/* Entry point to the conversational Onboarding agent. */}
+            <Link
+              href="/onboarding"
+              className="shrink-0 inline-flex items-center gap-2 rounded-xl border border-teal-400/30 bg-teal-500/10 hover:bg-teal-500/20 px-4 py-2 text-sm font-medium text-teal-200 transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Talk to Onboarding agent
+            </Link>
           </div>
-          <p className="text-sm text-zinc-400 leading-relaxed mt-2 max-w-3xl">
-            Your AI investment board. Five specialist agents{" "}
-            <span className="text-zinc-200 font-medium">analyze, debate, and govern</span>{" "}
-            every portfolio decision — the whole deliberation is committed to git as an
-            immutable audit trail.
-          </p>
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
             {["Onboarding", "Analyst", "Strategist", "Risk Officer", "Execution"].map(
               (a, i) => (
@@ -344,7 +357,12 @@ export default function Home() {
 
         {/* ── Secondary actions ───────────────────────────────────────── */}
         <section className="border-t border-zinc-900 pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <SecondaryLink
+              href="/onboarding"
+              icon={MessageSquare}
+              label="Onboarding agent"
+            />
             <SecondaryLink
               href="/profile"
               icon={Settings}

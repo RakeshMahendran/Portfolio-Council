@@ -361,23 +361,28 @@ export function parseRisk(md: string): RiskParsed {
     rules.push({ number: num, label, status: ruleStatusFromWord(m[4]), kind });
   }
 
-  // Fallback — markdown-table form (older agents):
-  //   | **#1: Goal commitment** … | ✅ PASS | … |
+  // Fallback — markdown-table form. Two layouts:
+  //   | **#1: Goal commitment** … | ✅ PASS | … |          (older agents)
+  //   | **Hard Rule #1: Goal commitment** | ✅ PASS | … |   (current agents)
+  // Soft-rule tables use STRONG / NEUTRAL / ALIGNED in the status cell.
   if (rules.length === 0) {
     const ruleRowRe =
-      /\|\s*\*{1,2}\s*#?(\d+):\s*([^*\n]+?)\s*\*{1,2}[^|]*\|\s*([^|\n]+?)\s*\|/gm;
+      /\|\s*\*{1,2}\s*(?:(Hard|Soft)\s*Rule\s*)?#?(\d+):\s*([^*\n|]+?)\s*\*{1,2}\s*\|\s*([^|\n]+?)\s*\|/gim;
     while ((m = ruleRowRe.exec(md)) !== null) {
-      const num = Number(m[1]);
-      if (rules.find((r) => r.number === num && r.kind === "Hard")) continue;
-      const label = m[2].trim().slice(0, 60);
-      const statusCell = m[3];
+      const kind = (m[1] ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() : "Hard") as "Hard" | "Soft";
+      const num = Number(m[2]);
+      const key = `${kind}#${num}`;
+      if (seenRule.has(key)) continue;
+      const label = m[3].trim().slice(0, 60);
+      const statusCell = m[4];
       let status: RuleCompliance["status"] = "info";
-      if (/❌|\bFAIL\b|\bVIOLATES?\b/i.test(statusCell)) status = "fail";
-      else if (/✅|\bPASS(?:ES)?\b/i.test(statusCell)) status = "pass";
+      if (/❌|\bFAIL\b|\bVIOLATES?\b|\bVETO\b/i.test(statusCell)) status = "fail";
+      else if (/✅|\bPASS(?:ES)?\b|\bSTRONG\b|\bALIGNED\b/i.test(statusCell)) status = "pass";
       else if (/AMEND/i.test(statusCell)) status = "amend";
-      else if (/⚠|PENDING|UNDETERMINABLE/i.test(statusCell)) status = "info";
+      else if (/⚠|NEUTRAL|PENDING|UNDETERMINABLE/i.test(statusCell)) status = "info";
       else continue;
-      rules.push({ number: num, label, status, kind: "Hard" });
+      seenRule.add(key);
+      rules.push({ number: num, label, status, kind });
     }
   }
 
@@ -423,6 +428,10 @@ function splitTableRow(line: string): string[] {
 
 export function parseExecution(md: string): ExecutionParsed {
   const orders: ExecutionOrder[] = [];
+  // Per-row rupee amounts (proceeds / deployed value), captured from a money
+  // column that is DISTINCT from the per-share price column. We sum these for
+  // the BUY/SELL totals — never the per-share price (₹4,260 × 11 ≠ ₹4,260).
+  const rowAmounts: { action: string; amt: number }[] = [];
   const lines = md.split("\n");
 
   // Header-driven parse. Find the order table by its header row — it contains
@@ -457,7 +466,7 @@ export function parseExecution(md: string): ExecutionParsed {
     // "INR" loosely so "Expected INR" works. Per-row we prefer a concrete price
     // target, falling back to the amount when the price is text ("Current NAV").
     const iPriceTarget = find(/price\s*target/, /\bprice\b/);
-    const iAmount = find(/\binr\b|amount|value|deploy/);
+    const iAmount = find(/\binr\b|amount|value|deploy|proceeds/);
     const iNotes = find(/note|sequenc/);
 
     let seq = 1;
@@ -477,6 +486,12 @@ export function parseExecution(md: string): ExecutionParsed {
       // Show the LIMIT price when it's a real number (equity orders); otherwise
       // the ₹ amount (debt-fund "Current NAV" rows → show ₹1,00,000).
       const priceOut = /\d/.test(priceTarget) ? priceTarget : amountCell;
+      // When a distinct amount column exists, capture its rupee value for the
+      // totals (the price column may be per-share, which doesn't sum).
+      if (iAmount >= 0 && iAmount !== iPriceTarget) {
+        const amt = parseInr("₹" + amountCell);
+        if (amt !== null && amt > 0) rowAmounts.push({ action, amt });
+      }
       orders.push({
         seq: Number.isFinite(seqCell) ? seqCell : seq++,
         symbol: symbol.slice(0, 48),
@@ -508,25 +523,75 @@ export function parseExecution(md: string): ExecutionParsed {
     }
   }
 
+  // Fallback — block form: each order is a "### Order N: ACTION SYMBOL" heading
+  // followed by bulleted fields:
+  //   ### Order 1: SELL BSE (profit-booking)
+  //   - **Action:** SELL
+  //   - **Symbol:** BSE (NSE)
+  //   - **Quantity:** 11 shares (full exit)
+  //   - **Target price:** ₹4,250.00 (LIMIT order)
+  //   - **Order type:** LIMIT DAY
+  //   - **Estimated proceeds:** ₹46,750
+  if (orders.length === 0) {
+    const blocks = md
+      .split(/(?=^#{2,4}\s+Order\s+\d+\b)/im)
+      .filter((b) => /^#{2,4}\s+Order\s+\d+\b/im.test(b));
+    let seq = 1;
+    for (const block of blocks) {
+      const field = (re: RegExp) => {
+        const mm = block.match(re);
+        return mm ? mm[1].trim() : "";
+      };
+      const symbol = field(/[-*]\s*\*{0,2}Symbol\*{0,2}\s*:\s*\*{0,2}\s*([A-Za-z0-9.&\-]+)/i);
+      const action = field(/[-*]\s*\*{0,2}Action\*{0,2}\s*:\s*\*{0,2}\s*([A-Za-z]+)/i).toUpperCase();
+      if (!symbol || !action) continue;
+      const qty = field(/[-*]\s*\*{0,2}Quantity\*{0,2}\s*:\s*\*{0,2}\s*([^\n(]+)/i) || "—";
+      const price = field(/[-*]\s*\*{0,2}(?:Target|Limit)\s*price\*{0,2}\s*:\s*\*{0,2}\s*₹?\s*([\d,.]+)/i);
+      const orderType = field(/[-*]\s*\*{0,2}Order\s*type\*{0,2}\s*:\s*\*{0,2}\s*([^\n(]+)/i);
+      const proceeds = field(/[-*]\s*\*{0,2}(?:Estimated|Expected|Net)\s*proceeds\*{0,2}\s*:\s*\*{0,2}\s*₹?\s*([\d,.]+)/i);
+      const seqNum = Number((block.match(/Order\s+(\d+)/i) ?? [])[1]);
+      if (proceeds) {
+        const amt = parseInr("₹" + proceeds);
+        if (amt !== null && amt > 0) rowAmounts.push({ action, amt });
+      }
+      orders.push({
+        seq: Number.isFinite(seqNum) ? seqNum : seq++,
+        symbol: symbol.slice(0, 48),
+        action,
+        qty: qty.replace(/\s+/g, " ").trim(),
+        orderType: orderType || undefined,
+        price: price || undefined,
+        sequencing: "",
+      });
+    }
+  }
+
   const totalBuyMatch = md.match(/Total\s*BUY[^\n]*?₹\s*([\d,.]+)/i);
   const totalSellMatch = md.match(/Total\s*SELL[^\n]*?₹\s*([\d,.]+)/i);
+  // Gross proceeds raised by a sell/trim rebalance — the table's TOTAL footer
+  // row or an explicit "(Gross|Total) Proceeds" line.
+  const proceedsMatch =
+    md.match(/(?:Gross|Total|Net)\s*(?:\w+\s+){0,2}Proceeds[^\n]*?₹\s*([\d,.]+)/i) ??
+    md.match(/^\|\s*\*{0,2}TOTAL\*{0,2}\s*\|[^\n]*?₹\s*([\d,.]+)/im);
   // "Net capital deployment" / "Net deployment" / "Total Deployment" — allow a
-  // word (e.g. "capital") between "Net" and "deployment".
+  // word (e.g. "capital") between "Net" and "deployment". For a sell-to-cash
+  // rebalance the deployed figure is the net proceeds redirected (e.g. into FD).
   const netMatch =
     md.match(/Net\s+(?:\w+\s+)?deployment[^\n]*?₹\s*([\d,.\-]+)/i) ??
-    md.match(/Total\s*(?:capital\s*)?Deployment[^\n]*?₹\s*([\d,.]+)/i);
+    md.match(/Total\s*(?:capital\s*)?Deployment[^\n]*?₹\s*([\d,.]+)/i) ??
+    md.match(/Net\s*Proceeds(?:\s*After\s*Tax)?[^\n]*?₹\s*([\d,.]+)/i);
   const liqMatch =
     md.match(/Post[-\s]?execution\s*liquidity[^\n]*?₹\s*([\d,.]+)/i) ??
     md.match(/Post[-\s]?deployment\s*FD[^\n]*?₹\s*([\d,.]+)/i);
 
-  // Fall back to summing the parsed order amounts when there's no explicit
-  // "Total BUY" line (the common case for these order tables).
+  // Fall back to summing the per-row rupee amounts (never the per-share price).
+  // SELL and TRIM both raise cash, so they roll into the "total SELL" figure.
   const sumByAction = (re: RegExp) =>
-    orders
-      .filter((o) => re.test(o.action))
-      .reduce((sum, o) => sum + (parseInr("₹" + (o.price ?? "")) ?? 0), 0);
-  const buyFromOrders = sumByAction(/^BUY$/);
-  const sellFromOrders = sumByAction(/^SELL$/);
+    rowAmounts
+      .filter((r) => re.test(r.action))
+      .reduce((sum, r) => sum + r.amt, 0);
+  const buyFromOrders = sumByAction(/^(BUY|ALLOCATE)$/);
+  const sellFromOrders = sumByAction(/^(SELL|TRIM)$/);
 
   return {
     orders,
@@ -539,7 +604,9 @@ export function parseExecution(md: string): ExecutionParsed {
       ? parseInr("₹" + totalSellMatch[1])
       : sellFromOrders > 0
         ? sellFromOrders
-        : null,
+        : proceedsMatch
+          ? parseInr("₹" + proceedsMatch[1])
+          : null,
     netDeployment: netMatch ? parseInr("₹" + netMatch[1]) : null,
     postExecutionLiquidity: liqMatch ? parseInr("₹" + liqMatch[1]) : null,
   };
@@ -800,37 +867,50 @@ export function parseNextReview(md: string): {
 } {
   const triggers: string[] = [];
 
-  // Explicit "Next review: <date>" or "review in 30 days"
-  let text =
-    md.match(/(?:Tranche\s+\d+\s*review|Next\s*(?:portfolio\s+)?review)\s*(?:in|on|by)?\s*([^\n.]+)/i)?.[1]?.trim() ?? "";
-  // Strip markdown bold + parenthetical asides so the text reads cleanly.
-  text = text
+  // Explicit "Next review: <date>" or "review in 30 days". Keep the raw match
+  // (with its parenthetical "(in ~31 days)") for date/day-count extraction.
+  const rawMatch =
+    md.match(/(?:Tranche\s+\d+\s*review|Next\s*(?:portfolio\s+)?review)\s*(?:due|in|on|by)?\s*[:—-]?\s*([^\n.]+)/i)?.[1]?.trim() ?? "";
+  // Cleaned, human-readable text — strip bold, parentheticals, leading "due:".
+  let text = rawMatch
     .replace(/\*+/g, "")
     .replace(/\([^)]*\)/g, "")
+    .replace(/^due\s*:?\s*/i, "")
     .replace(/[:—-]\s*$/, "")
     .trim();
+
+  // Day count — prefer computing it from a real date in the match ("June 25,
+  // 2026"), which is robust to whatever loose "~N days" the agent wrote and to
+  // stray "in N days" elsewhere in the report.
   let daysFromNow: number | null = null;
-  if (!text) {
-    const daysMatch = md.match(/review\s+in\s+(\d+)\s*days/i);
-    if (daysMatch) {
-      daysFromNow = Number(daysMatch[1]);
-      text = `${daysFromNow} days`;
+  const dateMatch = rawMatch.match(
+    /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4})/i,
+  );
+  if (dateMatch) {
+    const d = new Date(dateMatch[1].replace(/(\d+)(st|nd|rd|th)/i, "$1"));
+    if (!isNaN(d.getTime())) {
+      const diff = Math.round((d.getTime() - Date.now()) / 86_400_000);
+      if (diff >= 0 && diff < 400) daysFromNow = diff;
     }
-  } else {
-    // Extract day count from the cleaned text if present
-    const dm = text.match(/(\d+)\s*days?/i);
+  }
+  // Fallback: an explicit "~31 days" inside the matched text.
+  if (daysFromNow === null) {
+    const dm = rawMatch.match(/~?\s*(\d+)\s*days?/i);
     if (dm) daysFromNow = Number(dm[1]);
   }
-  // "in 30 days" embedded in steps
-  const inDays = md.match(/(?:in|after)\s+(\d+)\s*days/i);
-  if (daysFromNow === null && inDays) {
-    daysFromNow = Number(inDays[1]);
+  // Fallback: "review in N days" phrasing when there was no date at all.
+  if (daysFromNow === null) {
+    const daysMatch = md.match(/review\s+in\s+~?\s*(\d+)\s*days/i);
+    if (daysMatch) daysFromNow = Number(daysMatch[1]);
   }
+  if (!text && daysFromNow !== null) text = `${daysFromNow} days`;
 
   // Emergency triggers — typical phrasings
   const triggerPatterns = [
     /NIFTY\s*(?:drops?|falls?)\s*>?\s*(\d+)\s*%/gi,
-    /VIX\s*>?\s*(\d+)/gi,
+    // Require an explicit threshold/comparator so a plain reading ("VIX 16.94")
+    // isn't mistaken for a trigger ("VIX > 25", "VIX above 25", "VIX spikes to 25").
+    /VIX\s*(?:>|≥|>=|above|over|exceeds?|spikes?\s*(?:above|to)?|rises?\s*(?:above|to)?)\s*(\d+)/gi,
     /major\s+life\s+change/gi,
     /windfall/gi,
     /salary\s+change/gi,
@@ -894,22 +974,28 @@ export function parseTargetAllocation(md: string): TargetPosition[] {
   // Scope to the first "Post-...State" / "Resulting Allocation" block so we
   // don't blend the 6-month projection into the immediate snapshot.
   const stateMatch = md.match(
-    /###?\s*(?:Post-?[\w-]*\s*State|Resulting\s*Allocation|After\s*Deployment)[^\n]*\n([\s\S]*?)(?:\n###?\s|\n##\s|$)/i,
+    /###?\s*(?:Post-?[\w-]*\s*State|Resulting\s*Allocation|After\s*Deployment|After\s*Rebalance|Target\s*Mix)[^\n]*\n([\s\S]*?)(?:\n###?\s|\n##\s|$)/i,
   );
   if (stateMatch) {
     const block = stateMatch[1];
-    const bulletRe =
-      /[-*]\s*(Equity|Debt(?:\s*Funds?)?|Hybrid(?:\s*Funds?)?|Cash(?:\/Liquid)?|Gold|Bonds?)\s*:\s*~?\s*([\d.]+)\s*%\s*(?:\(([^)]*)\))?/gi;
-    let m;
+    const LABEL = "(Equity|Debt(?:\\s*Funds?)?|Hybrid(?:\\s*Funds?)?|Cash(?:\\s*\\/?\\s*Liquid)?|Liquid|Gold|Bonds?)";
     const seen = new Set<string>();
-    while ((m = bulletRe.exec(block)) !== null) {
-      const symbol = m[1].trim();
-      const key = symbol.toLowerCase();
-      if (seen.has(key)) continue;
+    const push = (label: string, pct: number, amount: number | null) => {
+      const key = label.toLowerCase();
+      if (seen.has(key) || isNaN(pct)) return;
       seen.add(key);
-      const pct = Number(m[2]);
-      const amount = m[3] ? parseInr(m[3]) : null;
-      if (!isNaN(pct)) out.push({ symbol, amount: amount ?? 0, pct });
+      out.push({ symbol: label, amount: amount ?? 0, pct });
+    };
+    // (B1) "pct-first" form: "- Equity: ~15% (NIFTYBEES ₹1.5L)"
+    const pctFirst = new RegExp(`[-*]\\s*\\*{0,2}${LABEL}\\*{0,2}\\s*:\\s*~?\\s*([\\d.]+)\\s*%\\s*(?:\\(([^)]*)\\))?`, "gi");
+    // (B2) "amount-first" form: "- **Equity:** ₹8,87,079 (59.03%)"
+    const amtFirst = new RegExp(`[-*]\\s*\\*{0,2}${LABEL}\\*{0,2}\\s*:\\s*\\*{0,2}\\s*₹\\s*([\\d,.]+)[^()\\n]*\\(\\s*([\\d.]+)\\s*%`, "gi");
+    let m;
+    while ((m = pctFirst.exec(block)) !== null) {
+      push(m[1].trim(), Number(m[2]), m[3] ? parseInr(m[3]) : null);
+    }
+    while ((m = amtFirst.exec(block)) !== null) {
+      push(m[1].trim(), Number(m[3]), parseInr("₹" + m[2]));
     }
   }
   return out;
@@ -930,22 +1016,36 @@ export function parseStressTests(md: string): StressScenario[] {
   const sectionMatch = md.match(/##\s*\d*\.?\s*Stress\s*Test[^\n]*\n([\s\S]*?)(?:\n## |$)/i);
   if (!sectionMatch) return out;
   const section = sectionMatch[1];
-  // Each scenario is "### Scenario N: NAME"
-  const blocks = section.split(/###\s+/).slice(1);
-  for (const block of blocks) {
-    const nameMatch = block.match(/^(Scenario\s+\d+:[^\n]+)/i);
-    if (!nameMatch) continue;
-    const name = nameMatch[1].replace(/\*+/g, "").trim();
-    // Drawdown can be written either way:
-    //   "→ **-8.85% drawdown**"   (% before the word)
-    //   "drawdown = -8.85%"        (word before the %)
+  // Scenarios come in three shapes the agents actually emit:
+  //   "### Scenario N: NAME"                              + multi-line body
+  //   "**Scenario A (-10% NIFTY shock):**"                + multi-line body
+  //   "- **Scenario A (-10% NIFTY):** ...drawdown -5.9%"  (inline, one bullet)
+  // Find every scenario lead-in (line-start, optional bullet/heading/bold), then
+  // slice the section into per-scenario blocks. Case-sensitive "Scenario" so we
+  // don't match prose like "scenario analysis".
+  const startRe = /(?:^|\n)[^\S\n]*(?:[-*]\s+)?(?:#{2,4}\s+)?\*{0,2}\s*(Scenario\s+[A-Z0-9][^\n]*)/g;
+  const starts: { idx: number; line: string }[] = [];
+  let h;
+  while ((h = startRe.exec(section)) !== null) {
+    starts.push({ idx: h.index, line: h[1] });
+    if (startRe.lastIndex === h.index) startRe.lastIndex++;
+  }
+  for (let si = 0; si < starts.length; si++) {
+    const block = section.slice(
+      starts[si].idx,
+      si + 1 < starts.length ? starts[si + 1].idx : undefined,
+    );
+    // Name = the lead-in up to the first ":" / "—" (strip markdown).
+    const name = starts[si].line.replace(/\*+/g, "").split(/[:—]/)[0].trim();
     // A scenario where you EXITED the exposed positions is a protection win,
     // not a drawdown — flag it so the card can say "protected" rather than "—".
     const protectedExit = /zero\s+exposure|avoided\s+(?:potential\s+)?loss|positions?\s+exited|no\s+exposure/i.test(block);
     const ddPctMatch =
+      // "drawdown -5.9%" / "drawdown: -4.2%" / "drawdown of 8%" (word → value).
+      block.match(/drawdown[^\n%]*?(-?[\d.]+)\s*%/i) ??
+      // "-8.85% drawdown" (value → word).
       block.match(/(-?[\d.]+)\s*%\s*drawdown/i) ??
-      block.match(/(?:max(?:imum)?\s*)?drawdown[^=:\n%]*[=:]\s*\*?\*?(-?[\d.]+)\s*%/i) ??
-      // "...₹13,86,999** (-7.8%)" — a parenthetical negative % after a value.
+      // bare parenthetical negative %, e.g. "...₹13,86,999 (-7.8%)".
       block.match(/\(\s*(-[\d.]+)\s*%/);
     const ddAmountMatch = block.match(/(?:Total\s*)?drawdown[^₹\n]*?₹\s*([\d,.]+)/i);
     const recoveryMatch = block.match(/Recovery\s*time[^:]*:\s*\*?\*?([^*\n]+?)\s*\*?\*?(?:\n|$)/i);
