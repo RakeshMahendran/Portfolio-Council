@@ -64,40 +64,55 @@ Click **"Try with sample data"** on the landing page → onboarding chat opens w
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  Next.js 16 frontend  (localhost:3000, App Router)       │
-│  /onboarding   chatbot intake, in-chat uploads           │
-│  /processing   post-onboarding polling page              │
-│  /session      4-agent debate viewer, 2×2 artifact grid  │
-│  /profile      data management (plan / RULES / holdings) │
-│  /dev          live git log + commit inspector           │
-└────────────────────┬─────────────────────────────────────┘
-                     │  fetch + NDJSON streaming
-                     ▼
-┌──────────────────────────────────────────────────────────┐
-│  FastAPI bridge  (localhost:8000)                        │
-│  /api/run       spawns gitclaw subprocess per agent      │
-│  /api/data/*    file CRUD on user_plan / RULES / holdings│
-│  /api/session/* per-date artifact reads                  │
-│  /api/log,/fork,/revert,/checkout  git operations as HTTP│
-└────────────────────┬─────────────────────────────────────┘
-                     │  asyncio.subprocess
-                     ▼
-┌──────────────────────────────────────────────────────────┐
-│  gitclaw  (Node.js)                                      │
-│  Reads agents/<name>/SOUL.md → loads model + tools       │
-│  Spawns AWS Bedrock / Claude Sonnet 4.5                  │
-│  Writes workspace/ artifacts + git commits               │
-└──────────────────────────────────────────────────────────┘
+A Next.js dashboard talks to a thin FastAPI bridge, which spawns **gitclaw**. The
+orchestrator delegates to five specialist agents; each writes a markdown artifact
+to `workspace/`. The orchestrator assembles the final report — and a **pre-commit
+hook physically blocks the commit unless the Risk Officer's verdict says APPROVE.**
+The git history *is* the audit trail.
 
-┌──────────────────────────────────────────────────────────┐
-│  git  (the source of truth)                              │
-│  hooks/pre-commit   refuses unauthorized rebalances      │
-│  reports/*-rebalance.md   session output                 │
-│  workspace/*.md           per-agent artifacts            │
-│  agents/<name>/*          forkable advisor personalities │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    User([You]) --> FE
+
+    subgraph FE["Next.js dashboard · localhost:3000"]
+        direction LR
+        Home["Home<br/>Today's Action · Roadmap to goal"]
+        Sess["Session<br/>4 agent cards · plain-English"]
+        Dev["/dev<br/>git log · commit inspector"]
+    end
+
+    FE -->|"NDJSON stream"| API
+
+    subgraph API["FastAPI bridge · localhost:8000"]
+        direction LR
+        Run["/api/run<br/>spawn gitclaw"]
+        DataApi["/api/data · /api/setup<br/>git ops"]
+    end
+
+    API -->|"subprocess"| Orch
+
+    subgraph CLAW["gitclaw runtime (Node) — provider-agnostic"]
+        Orch["Orchestrator · SOUL.md<br/>conducts · delegates · never advises"]
+        subgraph AG["5 agents — each agents/&lt;name&gt;/SOUL.md"]
+            direction LR
+            An["Analyst<br/>reports facts"]
+            St["Strategist<br/>proposes · cites RULES"]
+            Rk["Risk Officer<br/>APPROVE / AMEND / VETO + Plan B"]
+            Ex["Execution<br/>price-targeted orders"]
+        end
+        Orch --> An --> St --> Rk --> Ex
+        Rk -. "AMEND, loop back" .-> St
+    end
+
+    LLM["LLM provider<br/>Bedrock · Anthropic · OpenAI · Azure"] -.-> CLAW
+    Skills["skills/ (Python)<br/>analyze-holdings · check-market · import-holdings"] -.-> AG
+    Inputs["memory/user_plan.md<br/>RULES.md · data/holdings.json"] -.-> AG
+
+    AG -->|"write"| WS["workspace/*.md<br/>analysis · proposal · verdict · orders"]
+    Orch -->|"assemble"| Rep["reports/&lt;date&gt;-rebalance.md"]
+    Rep --> Hook{{"pre-commit hook<br/>Verdict: APPROVE?"}}
+    Hook -->|"yes"| Git[("git commit<br/>immutable audit trail")]
+    Hook -->|"no"| Blk["commit blocked"]
 ```
 
 ---
