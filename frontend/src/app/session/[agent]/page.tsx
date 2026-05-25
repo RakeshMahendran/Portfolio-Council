@@ -133,7 +133,7 @@ function AgentDetailInner() {
         }
       />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] gap-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] gap-6">
         {/* ─── Left sidebar — agent nav ──────────────────────────── */}
         <AgentNav
           currentAgent={agent}

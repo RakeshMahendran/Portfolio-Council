@@ -264,7 +264,7 @@ function SessionPageInner() {
         }
       />
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Run button + summary banner */}
         <div className="flex items-start justify-between gap-4">
           <div>

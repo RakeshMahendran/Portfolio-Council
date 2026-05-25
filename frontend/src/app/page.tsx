@@ -148,7 +148,7 @@ export default function Home() {
     return (
       <div className="flex-1 brand-aura text-zinc-100 flex flex-col">
         <SiteHeader />
-        <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-24" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -247,7 +247,36 @@ export default function Home() {
     <div className="flex-1 brand-aura text-zinc-100 flex flex-col">
       <SiteHeader />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-7 space-y-7 relative z-10">
+        {/* ── Product intro — make the dashboard self-explanatory ──────── */}
+        <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size={30} />
+            <h1 className="text-lg font-semibold tracking-tight">Portfolio Council</h1>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-400/20 text-teal-300 font-medium">
+              5-agent board
+            </span>
+          </div>
+          <p className="text-sm text-zinc-400 leading-relaxed mt-2 max-w-3xl">
+            Your AI investment board. Five specialist agents{" "}
+            <span className="text-zinc-200 font-medium">analyze, debate, and govern</span>{" "}
+            every portfolio decision — the whole deliberation is committed to git as an
+            immutable audit trail.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
+            {["Onboarding", "Analyst", "Strategist", "Risk Officer", "Execution"].map(
+              (a, i) => (
+                <span key={a} className="flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-zinc-300">
+                    {a}
+                  </span>
+                  {i < 4 && <span className="text-zinc-600">→</span>}
+                </span>
+              ),
+            )}
+          </div>
+        </section>
+
         {/* Holdings-pending banner — only for users who deferred upload, NOT
             for users whose portfolio is explicitly FD/cash-only (where the
             onboarding agent marked holdings as empty by design). */}
