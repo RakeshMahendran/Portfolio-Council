@@ -1009,6 +1009,49 @@ export function parseTargetAllocation(md: string): TargetPosition[] {
       push(m[1].trim(), Number(m[3]), parseInr("₹" + m[2]));
     }
   }
+
+  // (C) "Before | After" comparison table — read the target mix from the
+  // "After" column:
+  //   | Metric | Before | After | Change |
+  //   | **Equity (stocks + ETFs)** | ₹8,87,386 (66.56%) | ₹6,98,610 (52.40%) | -14.16pp |
+  //   | **Liquid (Cash + FD)**     | ₹3,98,000 (29.86%) | ₹5,18,776 (38.92%) | +9.06pp  |
+  if (out.length === 0) {
+    const lines = md.split("\n");
+    const cellsOf = (l: string) => l.split("|").map((c) => c.replace(/\*/g, "").trim());
+    const CLASS = /^(Equity|Debt|Hybrid|Cash|Liquid|Gold|Bonds?)\b/i;
+    const KIND: Record<string, string> = {
+      equity: "Equity", debt: "Debt", hybrid: "Hybrid", cash: "Cash",
+      liquid: "Liquid", gold: "Gold / Gold ETF", bond: "Bonds", bonds: "Bonds",
+    };
+    let afterCol = -1;
+    for (const l of lines) {
+      if (!/^\s*\|/.test(l)) continue;
+      const cells = cellsOf(l);
+      const idx = cells.findIndex((c) => /^after\b/i.test(c));
+      if (idx >= 0 && cells.some((c) => /^before\b/i.test(c))) {
+        afterCol = idx;
+        break;
+      }
+    }
+    if (afterCol >= 0) {
+      const seen = new Set<string>();
+      for (const l of lines) {
+        if (!/^\s*\|/.test(l)) continue;
+        const cells = cellsOf(l);
+        const cm = (cells[1] ?? "").match(CLASS);
+        if (!cm) continue;
+        const cell = cells[afterCol] ?? "";
+        const m = cell.match(/₹?\s*([\d,]+(?:\.\d+)?)[^()\n]*\(\s*([\d.]+)\s*%/);
+        if (!m) continue;
+        const key = cm[1].toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const pct = Number(m[2]);
+        if (isNaN(pct)) continue;
+        out.push({ symbol: KIND[key] ?? cm[1], amount: parseInr("₹" + m[1]) ?? 0, pct });
+      }
+    }
+  }
   return out;
 }
 
