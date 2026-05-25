@@ -1,10 +1,28 @@
-# Portfolio Council
+<h1 align="center">Portfolio Council</h1>
 
-> A 5-agent AI investment-research board you run as a git repo. Every decision is a commit. Every veto is enforced by a pre-commit hook. You fork an analyst the same way you fork a repo.
+<p align="center">
+  <strong>A 5-agent AI investment-research board you run as a git repo.</strong><br/>
+  Every decision is a commit. Every veto is enforced by a pre-commit hook.<br/>
+  You fork an advisor the same way you fork a repo.
+</p>
 
-Built on **[gitclaw](https://github.com/lyzr/gitclaw)** (Lyzr's GitAgent runtime) for the Lyzr AI hiring challenge: *"Build something with GitAgent that makes us go: okay… this person ships."*
+<p align="center">
+  <img src="https://img.shields.io/badge/built%20on-gitclaw-2563eb?style=flat-square" alt="built on gitclaw" />
+  <img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT" />
+  <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/FastAPI-0ea5e9?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/agents-5-14b8a6?style=flat-square" alt="5 agents" />
+</p>
 
-🎬 **[Watch the 4-min demo](ADD_LOOM_OR_YOUTUBE_LINK)** &nbsp;·&nbsp; [Architecture](#architecture) &nbsp;·&nbsp; [Decisions / ADRs](docs/DECISIONS.md) &nbsp;·&nbsp; [Quickstart](#quickstart)
+<p align="center">
+  <a href="ADD_LOOM_OR_YOUTUBE_LINK">Demo video</a> &bull;
+  <a href="#what-it-does">What it does</a> &bull;
+  <a href="#quickstart">Quickstart</a> &bull;
+  <a href="#architecture">Architecture</a> &bull;
+  <a href="docs/DECISIONS.md">Decisions</a>
+</p>
+
+> Built on **[gitclaw](https://github.com/lyzr/gitclaw)** (Lyzr's GitAgent runtime) for the Lyzr AI hiring challenge: *"Build something with GitAgent that makes us go: okay… this person ships."*
 
 > ⚠️ **Not investment advice.** Portfolio Council is an open-source research / educational tool that simulates a multi-agent governance flow. It is **not** a SEBI-registered investment adviser or research analyst. Outputs are illustrations of how the Council reasons, not personalized recommendations. **Consult a SEBI RIA before making any actual investment decision.** Past performance ≠ future results. The author accepts no liability for outcomes from following any output.
 
